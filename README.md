@@ -10,10 +10,10 @@ This is an **Enterprise Resource Planning (ERP) system** designed for a **lactat
 - Profile management and password updates.
 
 ### **2. Production Management**
-- Production tracking from raw materials to finished goods.
+- Uses [ESP32-DHT22-Data-Logger](https://github.com/Stefan-Macovei-Grigoras/ESP32-DHT22-Data-Logger) for real-time production tracking.
 - Batch processing and workflow automation.
 - Quality control logging and regulatory compliance.
-
+  
 ### **3. Inventory Management**
 - Real-time stock tracking.
 - Alerts for low stock levels.
