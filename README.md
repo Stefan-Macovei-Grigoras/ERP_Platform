@@ -19,27 +19,12 @@ This is an **Enterprise Resource Planning (ERP) system** designed for a **lactat
 - Alerts for low stock levels.
 - Stock movement and history logs.
 
-### **4. Supply Chain & Procurement**
-- Vendor and supplier management.
-- Purchase order tracking.
-- Logistics and shipment tracking.
-
-### **5. Sales & Distribution**
+### **4. Sales & Distribution**
 - Customer order processing.
 - Invoice generation and payment tracking.
 - Delivery and dispatch management.
 
-### **6. Financial Management**
-- Revenue and expense tracking.
-- Payroll processing and financial reporting.
-- Tax compliance and regulatory reporting.
-
-### **7. Human Resource Management**
-- Employee attendance and work logs.
-- Payroll and salary management.
-- Recruitment and onboarding system.
-
-### **8. Data Analytics & Reporting**
+### **4. Data Analytics & Reporting**
 - Business insights dashboard.
 - Custom report generation.
 - Regulatory compliance reports.
