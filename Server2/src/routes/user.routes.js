@@ -1,0 +1,23 @@
+// const express = require('express');
+// const router = express.Router();
+// const { createUser, getUsers, login } = require('../controllers/user.controller');
+// const { authenticateToken, requireRole } = require('../middlewares/auth.middleware');
+
+// router.post('/auth/login', login);
+// router.post('/users', authenticateToken, requireRole('admin'), createUser);
+// router.get('/users', authenticateToken, requireRole('admin'), getUsers);
+
+// module.exports = router;
+// 📁 src/routes/user.routes.js
+const express = require('express');
+const router = express.Router();
+const { createUser, getUsers, updateUser } = require('../controllers/user.controller');
+const { login } = require('../controllers/loginController');
+//const { authenticateToken, requireRole } = require('../middlewares/auth.middleware');
+
+// ❗️ NO /users prefix here!
+router.post('/', createUser);        
+router.get('/', getUsers);           
+router.patch('/:id', updateUser);
+
+module.exports = router;
