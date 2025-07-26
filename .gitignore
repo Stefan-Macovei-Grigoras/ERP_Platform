@@ -1,0 +1,3 @@
+# Ignore ClientApp and ServerApp directories
+ClientApp/
+ServerApp/
