@@ -45,7 +45,7 @@ const getRecipeById = async (req, res) => {
   }
 };
 
-// GET /recipes/product/:productId
+// GET /recipe/product/:productId
 const getRecipesByProduct = async (req, res) => {
   const { productId } = req.params;
   logger.log(`[GET RECIPES BY PRODUCT] Attempting to fetch recipes for productId=${productId}...`);

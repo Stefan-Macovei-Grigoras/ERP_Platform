@@ -240,56 +240,75 @@ import {
   Skeleton
 } from '@mui/material';
 import {
-  PlayArrow,
+  AccessTime,
   LocalDining,
-  Assignment
+  PlayArrow,
+  Assignment,
+  Refresh
 } from '@mui/icons-material';
 
-// Simple API calls
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+// Import API service
+import factoryApiService from '../../services/factory/factoryApiService';
 
-function ProductSelection({ onBatchSelect }) {
-  const [batches, setBatches] = useState([]);
+function ProductSelection({ onProductSelect }) {
+  const [availableBatches, setAvailableBatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchDueBatches();
+    fetchAvailableBatches();
   }, []);
 
-  const fetchDueBatches = async () => {
+  const fetchAvailableBatches = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // Fetch batches with stage "due"
-      const response = await fetch(`${API_BASE_URL}/batches`);
-      const data = await response.json();
+      const batches = await factoryApiService.getAvailableBatches();
+      console.log('Fetched batches from API:', batches);
       
-      // Filter only "due" batches
-      const dueBatches = data.filter(batch => batch.stage === 'due');
-      setBatches(dueBatches);
+      setAvailableBatches(batches);
     } catch (err) {
-      console.error('Failed to fetch batches:', err);
-      setError('Failed to load due batches. Please try again.');
+      console.error('Failed to fetch available batches:', err);
+      setError('Failed to load available batches. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleStartBatch = async (batch) => {
-    try {
-      // Update batch stage to "in-progress"
-      await fetch(`${API_BASE_URL}/batches/${batch.id}/stage`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ stage: 'in-progress' })
-      });
+  const handleStartProduction = (batch) => {
+    console.log('handleStartProduction called with batch:', batch);
+    
+    // Validate batch data before passing
+    if (!batch || !batch.id) {
+      console.error('Invalid batch data:', batch);
+      alert('Invalid batch selected. Please try again.');
+      return;
+    }
+    
+    if (!batch.Product?.Recipe) {
+      console.error('Batch has no recipe:', batch);
+      alert('This batch has no recipe defined.');
+      return;
+    }
+    
+    onProductSelect(batch);
+  };
 
-      onBatchSelect(batch);
-    } catch (err) {
-      console.error('Failed to start batch:', err);
-      setError('Failed to start batch. Please try again.');
+  const formatDuration = (minutes) => {
+    if (minutes < 60) return `${minutes}min`;
+    if (minutes < 1440) { // Less than 24 hours
+      const hours = Math.floor(minutes / 60);
+      const remainingMinutes = minutes % 60;
+      return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}min` : `${hours}h`;
+    } else { // 24 hours or more
+      const days = Math.floor(minutes / 1440);
+      const remainingHours = Math.floor((minutes % 1440) / 60);
+      
+      let result = `${days}d`;
+      if (remainingHours > 0) result += ` ${remainingHours}h`;
+      
+      return result;
     }
   };
 
@@ -297,7 +316,7 @@ function ProductSelection({ onBatchSelect }) {
     return (
       <Box>
         <Typography variant="h5" fontWeight="bold" mb={3}>
-          Select Batch to Start Production
+          Available Batches for Production
         </Typography>
         <Grid container spacing={3}>
           {Array.from({ length: 4 }).map((_, index) => (
@@ -311,6 +330,8 @@ function ProductSelection({ onBatchSelect }) {
                       <Skeleton variant="text" width={80} height={20} />
                     </Box>
                   </Box>
+                  <Skeleton variant="text" width="100%" height={20} />
+                  <Skeleton variant="text" width="60%" height={20} />
                 </CardContent>
                 <CardActions>
                   <Skeleton variant="rectangular" width={100} height={36} />
@@ -329,13 +350,18 @@ function ProductSelection({ onBatchSelect }) {
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Box>
           <Typography variant="h5" fontWeight="bold">
-            Select Batch to Start Production
+            Available Batches for Production
           </Typography>
           <Typography variant="body2" color="textSecondary">
-            Choose a batch from the due production queue
+            Select a batch that's ready to start production
           </Typography>
         </Box>
-        <Button variant="outlined" onClick={fetchDueBatches}>
+        <Button 
+          variant="outlined" 
+          startIcon={<Refresh />}
+          onClick={fetchAvailableBatches}
+          disabled={loading}
+        >
           Refresh
         </Button>
       </Box>
@@ -347,10 +373,20 @@ function ProductSelection({ onBatchSelect }) {
         </Alert>
       )}
 
+      {/* Summary */}
+      <Paper sx={{ p: 2, mb: 3, textAlign: 'center' }}>
+        <Typography variant="h4" color="primary" fontWeight="bold">
+          {availableBatches.length}
+        </Typography>
+        <Typography variant="body2" color="textSecondary">
+          Batches Ready for Production
+        </Typography>
+      </Paper>
+
       {/* Batches Grid */}
       <Grid container spacing={3}>
-        {batches.length > 0 ? (
-          batches.map((batch) => (
+        {availableBatches.length > 0 ? (
+          availableBatches.map((batch) => (
             <Grid item xs={12} sm={6} md={4} key={batch.id}>
               <Card 
                 elevation={2} 
@@ -375,29 +411,55 @@ function ProductSelection({ onBatchSelect }) {
                       <Typography variant="h6" fontWeight="bold">
                         {batch.Product?.name || 'Unknown Product'}
                       </Typography>
-                      <Typography variant="caption" color="textSecondary">
+                      <Typography variant="caption" color="primary">
                         Batch ID: {batch.id}
+                      </Typography>
+                      <Typography variant="caption" color="textSecondary" display="block">
+                        Recipe: {batch.Product?.Recipe?.name || 'No recipe'}
                       </Typography>
                     </Box>
                   </Box>
 
-                  {/* Batch Details */}
-                  <Box display="flex" gap={1} mb={2}>
+                  {/* Production Details */}
+                  <Box display="flex" gap={1} mb={2} flexWrap="wrap">
+                    <Chip 
+                      label={`Yield: ${batch.Product?.Recipe?.yield || 'N/A'}kg`}
+                      size="small"
+                      variant="outlined"
+                      color="primary"
+                    />
+                    <Chip 
+                      label={formatDuration(batch.Product?.Recipe?.totalTime || 0)}
+                      size="small"
+                      variant="outlined"
+                      color="secondary"
+                      icon={<AccessTime />}
+                    />
                     <Chip 
                       label={batch.stage}
                       size="small"
-                      variant="outlined"
                       color="warning"
                     />
                   </Box>
 
-                  {/* Created Date */}
+                  {/* Steps Count */}
                   <Box display="flex" alignItems="center" gap={1} mb={2}>
                     <Assignment fontSize="small" color="disabled" />
                     <Typography variant="body2" color="textSecondary">
-                      Created: {new Date(batch.createdAt).toLocaleDateString()}
+                      {batch.Product?.Recipe?.steps?.steps?.length || 0} production steps
                     </Typography>
                   </Box>
+
+                  {/* First Few Steps Preview */}
+                  <Typography variant="body2" color="textSecondary">
+                    Steps: {batch.Product?.Recipe?.steps?.steps?.slice(0, 3).map(step => step.name).join(', ')}
+                    {batch.Product?.Recipe?.steps?.steps?.length > 3 && '...'}
+                  </Typography>
+
+                  {/* Created date */}
+                  <Typography variant="caption" color="textSecondary" display="block" mt={1}>
+                    Created: {new Date(batch.createdAt).toLocaleDateString()}
+                  </Typography>
                 </CardContent>
 
                 <CardActions>
@@ -405,7 +467,7 @@ function ProductSelection({ onBatchSelect }) {
                     variant="contained"
                     startIcon={<PlayArrow />}
                     fullWidth
-                    onClick={() => handleStartBatch(batch)}
+                    onClick={() => handleStartProduction(batch)}
                     sx={{ bgcolor: '#2e7d32', '&:hover': { bgcolor: '#1b5e20' } }}
                   >
                     Start Production
@@ -419,15 +481,15 @@ function ProductSelection({ onBatchSelect }) {
             <Paper sx={{ p: 4, textAlign: 'center' }}>
               <LocalDining sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
               <Typography variant="h6" color="textSecondary" mb={1}>
-                No Batches Due
+                No Batches Available
               </Typography>
               <Typography variant="body2" color="textSecondary">
-                There are currently no batches scheduled for production.
+                There are currently no batches ready for production.
               </Typography>
               <Button 
                 variant="outlined" 
                 sx={{ mt: 2 }}
-                onClick={fetchDueBatches}
+                onClick={fetchAvailableBatches}
               >
                 Refresh List
               </Button>
