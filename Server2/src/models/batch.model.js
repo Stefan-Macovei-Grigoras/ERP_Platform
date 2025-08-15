@@ -1,8 +1,8 @@
-// 📁 src/models/order.model.js
+// 📁 src/models/batch.model.js
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
 
-const Order = sequelize.define('Order', {
+const Batch = sequelize.define('Batch', {
     productId: { type: DataTypes.INTEGER, allowNull: false },
     stage: {
       type: DataTypes.ENUM('due', 'processing', 'packaging', 'done'),
@@ -12,6 +12,10 @@ const Order = sequelize.define('Order', {
     createdAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
     finishedAt: { type: DataTypes.DATE, allowNull: true },
     updatedAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
+  }
+, {
+    timestamps: true,  // Enable timestamps
+    tableName: 'Batch'
   });
 
-module.exports = Order;
+module.exports = Batch;

@@ -18,7 +18,7 @@ export default function Login() {
     e.preventDefault();
     setError('');
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', form);
+      const res = await axios.post('http://localhost:5000/login', form);
       login(res.data.token); // Save token in context/localStorage
       navigate('/dashboard'); // or wherever your protected route is
     } catch (err) {

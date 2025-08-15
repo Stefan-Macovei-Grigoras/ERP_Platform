@@ -11,13 +11,14 @@
 // 📁 src/routes/user.routes.js
 const express = require('express');
 const router = express.Router();
-const { createUser, getUsers, updateUser } = require('../controllers/user.controller');
+const { createUser, getUsers, updateUser ,deleteUser} = require('../controllers/user.controller');
 const { login } = require('../controllers/loginController');
 //const { authenticateToken, requireRole } = require('../middlewares/auth.middleware');
 
 // ❗️ NO /users prefix here!
 router.post('/', createUser);        
 router.get('/', getUsers);           
-router.patch('/:id', updateUser);
+router.put('/:id', updateUser);
+router.delete('/:id', deleteUser)
 
 module.exports = router;

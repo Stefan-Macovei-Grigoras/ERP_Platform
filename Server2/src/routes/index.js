@@ -4,14 +4,16 @@ const router = express.Router();
 
 const userRoutes = require('./user.routes');
 const productRoutes = require('./product.routes');
-const materialRoutes = require('./material.routes');
-const orderRoutes = require('./order.routes');
+const ingredientRoutes = require('./ingredient.routes');
+const batchRoutes = require('./batch.routes');
 const loginController  = require('../controllers/loginController');
+const recipeRoutes = require('./recipe.routes');
 
 router.post('/login', loginController.login); 
 router.use('/user', userRoutes);
 router.use('/product', productRoutes);
-router.use('/material', materialRoutes);
-router.use('/order', orderRoutes);
+router.use('/ingredient', ingredientRoutes);
+router.use('/batch', batchRoutes);
+router.use('/recipe', recipeRoutes);
 
 module.exports = router;

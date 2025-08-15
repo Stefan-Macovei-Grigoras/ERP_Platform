@@ -1,14 +1,16 @@
-// 📁 src/models/product.model.js
+// 📁 src/models/material.model.js
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
 
-const Material = sequelize.define('Material', {
+const Ingredient = sequelize.define('Ingredient', {
+  id: {type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
   name: { type: DataTypes.STRING, allowNull: false },
   quantity: { type: DataTypes.INTEGER, allowNull: false },
   minThreshold: { type: DataTypes.INTEGER, allowNull: false },
 }, {
-    timestamps: false  // 👈 ADD THIS LINE!
+    timestamps: false,
+    tableName: 'Ingredient'
   });
 
 
-module.exports = Material;
+module.exports = Ingredient;

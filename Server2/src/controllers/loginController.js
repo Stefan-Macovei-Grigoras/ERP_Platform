@@ -4,19 +4,20 @@ const express = require('express');
 const { User } = require('../models/index.model');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const logger = require('../utils/logger');
 require('dotenv').config();
 
 const secretKey = process.env.JWT_SECRET;
 
 async function login(req, res) {
   const { username, password } = req.body;
-  console.log(username, password);
+  logger.log(username, password);
   try {
     const user = await User.findOne({ where: { userName: username } });
     if (!user) {
       return res.status(401).json({ message: 'User not found' });
     }
-    console.log(user.password);
+    logger.log(user.password);
     const isMatch = password === user.password ;
     //const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
@@ -26,7 +27,7 @@ async function login(req, res) {
     const token = tokenGenerator(user.role, user.username);
     res.json({ token, message: 'Login successful' });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ message: 'Internal server error' });
   }
 }
