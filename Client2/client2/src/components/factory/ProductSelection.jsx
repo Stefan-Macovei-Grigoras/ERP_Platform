@@ -244,7 +244,8 @@ import {
   LocalDining,
   PlayArrow,
   Assignment,
-  Refresh
+  Refresh,
+  PlayCircle
 } from '@mui/icons-material';
 
 // Import API service
@@ -274,6 +275,25 @@ function ProductSelection({ onProductSelect }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleResumeProduction = (batch) => {
+    console.log('handleResumeProduction called with batch:', batch);
+    
+    // Validate batch data before passing
+    if (!batch || !batch.id) {
+      console.error('Invalid batch data:', batch);
+      alert('Invalid batch selected. Please try again.');
+      return;
+    }
+    
+    if (!batch.Product?.Recipe) {
+      console.error('Batch has no recipe:', batch);
+      alert('This batch has no recipe defined.');
+      return;
+    }
+    
+    onProductSelect(batch); // Use the same handler for now
   };
 
   const handleStartProduction = (batch) => {
@@ -463,15 +483,27 @@ function ProductSelection({ onProductSelect }) {
                 </CardContent>
 
                 <CardActions>
-                  <Button 
-                    variant="contained"
-                    startIcon={<PlayArrow />}
-                    fullWidth
-                    onClick={() => handleStartProduction(batch)}
-                    sx={{ bgcolor: '#2e7d32', '&:hover': { bgcolor: '#1b5e20' } }}
-                  >
-                    Start Production
-                  </Button>
+                  {batch.stage === 'start-processing' ? (
+                    <Button 
+                      variant="contained"
+                      startIcon={<PlayCircle/>}
+                      fullWidth
+                      onClick={() => handleResumeProduction(batch)}
+                      sx={{ bgcolor: '#2196f3', '&:hover': { bgcolor: '#1976d2' } }}
+                    >
+                      Continue Production
+                    </Button>
+                  ) : (
+                    <Button 
+                      variant="contained"
+                      startIcon={<PlayArrow />}
+                      fullWidth
+                      onClick={() => handleStartProduction(batch)}
+                      sx={{ bgcolor: '#2e7d32', '&:hover': { bgcolor: '#1b5e20' } }}
+                    >
+                      Start Production
+                    </Button>
+                  )}
                 </CardActions>
               </Card>
             </Grid>

@@ -11,7 +11,8 @@ const Batch = sequelize.define('Batch', {
     },
     createdAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
     finishedAt: { type: DataTypes.DATE, allowNull: true },
-    updatedAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
+    updatedAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+    currentSteps: {type: DataTypes.JSON,allowNull: false}
   }
 , {
     timestamps: true,  // Enable timestamps

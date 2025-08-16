@@ -162,7 +162,7 @@ class FactoryApiService {
       
       // Filter for due batches that have Product with Recipe
       const availableBatches = batches.filter(batch => {
-        const isValid = batch.stage === 'due' &&
+        const isValid = (batch.stage === 'due' || batch.stage === 'start-processing') &&
           batch.Product && 
           batch.Product.Recipe && 
           batch.Product.Recipe.steps &&
