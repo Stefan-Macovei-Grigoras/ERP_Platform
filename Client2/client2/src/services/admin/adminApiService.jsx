@@ -638,7 +638,7 @@ class AdminApiService {
   /**
    * Update batch
    */
-  async updateBatch(id, batchData) {
+  async updateBatchPut(id, batchData) {
     try {
       const response = await fetch(`${API_BASE_URL}/batch/${id}`, {
         method: 'PUT',
@@ -709,6 +709,31 @@ class AdminApiService {
       throw error;
     }
   }
+  async updateBatch(id, batchData) {
+    try {
+      console.log('Updating batch:', id, 'with data:', batchData); // Debug log
+      
+      const response = await fetch(`${API_BASE_URL}/batch/${id}`, {
+        method: 'PATCH', // Uppercase
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.getAuthToken()}`
+        },
+        body: JSON.stringify(batchData) // batchData should be an object like { stage: 'done' }
+      });
+      console.log(JSON.stringify(batchData))
+
+      if (!response.ok) {
+        throw new Error(`Failed to update batch: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating batch:', error);
+      throw error;
+    }
+  }
+  
 }
 
 // Export a singleton instance
