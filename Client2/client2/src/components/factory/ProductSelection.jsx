@@ -140,25 +140,11 @@ function ProductSelection({ onProductSelect }) {
   }
 
   return (
-    <Box>
-      {/* Page Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Box>
-          <Typography variant="h5" fontWeight="bold">
-            Available Batches for Production
-          </Typography>
-      
-        </Box>
-        <Button 
-          variant="outlined" 
-          startIcon={<Refresh />}
-          onClick={fetchAvailableBatches}
-          disabled={loading}
-        >
-          Refresh
-        </Button>
-      </Box>
-
+    <Box sx={{ 
+      maxHeight: 'calc(100vh - 30px)', 
+      overflow: 'auto', 
+      p: 2 
+    }}>
       {/* Error Alert */}
       {error && (
         <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
@@ -167,27 +153,44 @@ function ProductSelection({ onProductSelect }) {
       )}
 
       {/* Summary */}
-      <Paper sx={{ p: 2, mb: 3, textAlign: 'center' }}>
-        <Typography variant="h4" color="primary" fontWeight="bold">
-          {availableBatches.length}
-        </Typography>
-        <Typography variant="body2" color="textSecondary">
-          Batches Ready for Production
-        </Typography>
+      <Paper sx={{ p: 2, mb: 3, textAlign: 'center', maxHeight: 50 }}>
+        <Grid container spacing={2} alignItems="center" justifyContent="space-between">
+          <Grid item xs>
+            <Box display="flex" alignItems="center" gap={2}>
+              <Typography variant="h5" fontWeight="bold">
+                Available Batches for Production: 
+              </Typography>
+              <Typography variant="h4" color="primary" fontWeight="bold">
+                {availableBatches.length}
+              </Typography>
+            </Box>
+          </Grid>
+          <Grid item>
+            <Button 
+              variant="outlined" 
+              startIcon={<Refresh />}
+              onClick={fetchAvailableBatches}
+              disabled={loading}
+            >
+              Refresh List
+            </Button>
+          </Grid>
+        </Grid>
       </Paper>
 
       {/* Batches Grid */}
-      <Box sx={{ maxHeight: '600px', overflow: 'auto', pr: 1 }}>
+      <Box sx={{ maxHeight: 'calc(100vh - 200px)', overflow: 'auto', pr: 1, p: 2 }}>
         <Grid container spacing={3} justifyContent="center">
           {availableBatches.length > 0 ? (
             availableBatches.map((batch) => (
-              <Grid item xs={12} md={6} key={batch.id}>
+              <Grid item xs={12} md={availableBatches.length === 1 ? 12 : 6} key={batch.id}>
                 <Card 
                   elevation={2} 
                   sx={{ 
                     //height: '100%', 
-                    height: 350,
-                    width: 400,
+                    height: 320,
+                    width: '100%',
+                    maxWidth: 350,
                     display: 'flex', 
                     flexDirection: 'column',
                     '&:hover': {
@@ -294,13 +297,6 @@ function ProductSelection({ onProductSelect }) {
                 <Typography variant="body2" color="textSecondary">
                   There are currently no batches ready for production.
                 </Typography>
-                <Button 
-                  variant="outlined" 
-                  sx={{ mt: 2 }}
-                  onClick={fetchAvailableBatches}
-                >
-                  Refresh List
-                </Button>
               </Paper>
             </Grid>
           )}

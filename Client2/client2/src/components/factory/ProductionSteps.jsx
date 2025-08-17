@@ -360,11 +360,284 @@ function ProductionSteps({ selectedBatch, onBackToSelection, onProductionComplet
     return 'pending';
   };
 
-  return (
-    <Box>
+//   return (
+//     <Box width="99vw">
+//       {/* Header */}
+//       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} width="97vw">
+//         <Box width="90vw"> 
+//           <Button 
+//             startIcon={<ArrowBack />}
+//             onClick={onBackToSelection}
+//             sx={{ mb: 1 }}
+//             disabled={loading}
+//           >
+//             Back to Selection
+//           </Button>
+//           <Typography variant="h5" fontWeight="bold">
+//             Production: {selectedBatch?.Product?.name}
+//           </Typography>
+//           <Typography variant="body2" color="textSecondary">
+//             Recipe: {recipe?.name} | Expected Yield: {recipe?.yield}kg | Batch ID: {selectedBatch?.id}
+//           </Typography>
+//           <Box display="flex" gap={1} mt={1}>
+//             <Chip 
+//               label={`Stage: ${currentBatch?.stage || selectedBatch?.stage}`} 
+//               color={currentBatch?.stage === 'start-processing' ? 'primary' : 'warning'} 
+//               size="small" 
+//             />
+//           </Box>
+//         </Box>
+//         <Box textAlign="right">
+//           <Typography variant="h6" color="primary">
+//             {Math.round(progress)}% Complete
+//           </Typography>
+//           <LinearProgress 
+//             variant="determinate" 
+//             value={progress} 
+//             sx={{ width: 200, mt: 1 }}
+//           />
+//           <Typography variant="caption" color="textSecondary" display="block" mt={1}>
+//             {completedSteps.length} of {steps.length} steps done
+//           </Typography>
+//         </Box>
+//       </Box>
+
+//       {/* Production Info Alert */}
+//       <Alert severity="info" sx={{ mb: 3 }}>
+//         <Typography variant="body2">
+//           <strong>Recipe:</strong> {recipe?.name} | 
+//           <strong> Total Time:</strong> {formatDuration(recipe?.totalTime || 0)} | 
+//           <strong> Steps:</strong> {steps.length}
+//         </Typography>
+//       </Alert>
+
+//       {/* Main Content Grid */}
+//       <Grid container spacing={3}>
+//         {/* Left Column - Sensor Data */}
+//         <Grid item xs={12} lg={4}>
+//           <Box sx={{ position: 'sticky', top: 24 }}>
+//             <SensorDataDisplay />
+//           </Box>
+//         </Grid>
+
+//         {/* Right Column - Production Steps */}
+//         <Grid item xs={12} lg={8} >
+//           {/* Start Production Button */}
+//           {!productionStarted && (
+//             <Alert severity="warning" sx={{ mb: 3 }}>
+//               <Box display="flex" justifyContent="space-between" alignItems="center">
+//                 <Typography>Ready to start production? This will update the batch status to 'start-processing'.</Typography>
+//                 <Button 
+//                   variant="contained"
+//                   startIcon={<PlayArrow />}
+//                   onClick={handleStartProduction}
+//                   disabled={loading}
+//                   sx={{ ml: 2 }}
+//                 >
+//                   {loading ? 'Starting...' : 'Start Production'}
+//                 </Button>
+//               </Box>
+//             </Alert>
+//           )}
+
+//           {/* Production Steps */}
+//           <Paper elevation={2} sx={{ p: 3,  overflow: 'auto'}}>
+//             <Stepper activeStep={activeStep} orientation="vertical" >
+//               {steps.map((step, index) => {
+//                 const status = getStepStatus(index);
+//                 const isCompleted = status === 'completed';
+//                 const isActive = status === 'active';
+
+//                 // Get completion data from database if available
+//                 const completionData = selectedBatch.currentSteps?.find(
+//                   dbStep => dbStep.stepNumber === index + 1 && dbStep.completed
+//                 ) || completedSteps.find(cs => cs.stepNumber === index + 1);
+
+//                 return (
+//                   <Step key={index} completed={isCompleted}>
+//                     <StepLabel
+//                       icon={isCompleted ? <CheckCircle color="success" /> : undefined}
+//                       sx={{
+//                         '& .MuiStepLabel-label': {
+//                           fontWeight: isActive ? 'bold' : 'normal',
+//                           color: isActive ? 'primary.main' : 'inherit'
+//                         }
+//                       }}
+//                     >
+//                       <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
+//                         <Typography variant="h6">
+//                           Step {step.number}: {step.name}
+//                         </Typography>
+//                         {isActive && (
+//                           <Chip 
+//                             label="In Progress" 
+//                             color="primary" 
+//                             size="small"
+//                             icon={<Timer />}
+//                           />
+//                         )}
+//                         {isCompleted && (
+//                           <Chip 
+//                             label="Completed" 
+//                             color="success" 
+//                             size="small"
+//                             icon={<Done />}
+//                           />
+//                         )}
+//                       </Box>
+//                     </StepLabel>
+
+//                     <StepContent>
+//                        <Box sx={{ 
+//                         maxHeight: 250, 
+//                         overflow: 'auto',
+//                         pr: 1 
+//                       }}>
+//                       <Card variant="outlined" sx={{ mt: 2, mb: 2 }}>
+//                         <CardContent>
+//                           {/* Step Instructions */}
+//                           <Typography variant="body1" mb={2} sx={{ fontStyle: 'italic' }}>
+//                             "{step.instructions}"
+//                           </Typography>
+
+//                           {/* Step Parameters */}
+//                           <Box display="flex" gap={2} mb={2} flexWrap="wrap">
+//                             <Chip 
+//                               label={`Expected: ${formatDuration(step.duration)}`}
+//                               icon={<Timer />}
+//                               size="small"
+//                               variant="outlined"
+//                             />
+//                             <Chip 
+//                               label={`Temperature: ${step.temperature}°C`}
+//                               icon={<Thermostat />}
+//                               size="small"
+//                               variant="outlined"
+//                               color="secondary"
+//                             />
+//                             {isActive && currentStepStartTime && (
+//                               <Chip 
+//                                 label={`Started: ${currentStepStartTime.toLocaleTimeString()}`}
+//                                 size="small"
+//                                 variant="outlined"
+//                                 color="info"
+//                               />
+//                             )}
+//                           </Box>
+
+//                           {/* Action Buttons */}
+//                           {isActive && productionStarted && (
+//                             <Box display="flex" gap={2} mt={2}>
+//                               <Button 
+//                                 variant="contained"
+//                                 onClick={handleCompleteStep}
+//                                 startIcon={<CheckCircle />}
+//                                 color="success"
+//                                 disabled={loading}
+//                               >
+//                                 Complete Step
+//                               </Button>
+//                             </Box>
+//                           )}
+
+//                           {/* Completed Step Info - show data from database */}
+//                           {isCompleted && completionData && (
+//                             <Box mt={2} p={2} bgcolor="success.light" borderRadius={1}>
+//                               <Typography variant="body2" color="success.dark">
+//                                 ✓ Completed {completionData.completedAt && `at ${new Date(completionData.completedAt).toLocaleTimeString()}`}
+//                               </Typography>
+//                               {completionData.actualDuration && (
+//                                 <Typography variant="body2" color="success.dark">
+//                                   Actual duration: {formatDuration(completionData.actualDuration)} 
+//                                   {step.duration !== completionData.actualDuration && (
+//                                     <span> (Expected: {formatDuration(step.duration)})</span>
+//                                   )}
+//                                 </Typography>
+//                               )}
+//                               {completionData.notes && (
+//                                 <Typography variant="body2" color="success.dark" sx={{ mt: 1, fontStyle: 'italic' }}>
+//                                   Notes: {completionData.notes}
+//                                 </Typography>
+//                               )}
+//                             </Box>
+//                           )}
+//                         </CardContent>
+//                       </Card>
+//                       </Box>
+//                     </StepContent>
+//                   </Step>
+//                 );
+//               })}
+//             </Stepper>
+
+//             {/* Production Complete */}
+//             {shouldShowCompletion && (
+//               <Box mt={4} p={3} bgcolor="success.light" borderRadius={2} textAlign="center">
+//                 <CheckCircle sx={{ fontSize: 48, color: 'success.main', mb: 2 }} />
+//                 <Typography variant="h5" color="success.dark" fontWeight="bold" mb={1}>
+//                   Processing Complete!
+//                 </Typography>
+//                 <Typography variant="body1" color="success.dark" mb={2}>
+//                   All {steps.length} steps completed successfully. Batch #{currentBatch?.id} is ready for packaging.
+//                 </Typography>
+//                 <Typography variant="body2" color="success.dark" mb={2}>
+//                   Total Production Time: {formatDuration(Object.values(stepTimers).reduce((sum, time) => sum + time, 0))}
+//                 </Typography>
+//                 <Button 
+//                   variant="contained"
+//                   color="success"
+//                   size="large"
+//                   onClick={onBackToSelection}
+//                   disabled={loading}
+//                 >
+//                   Return to Batch Selection
+//                 </Button>
+//               </Box>
+//             )}
+//           </Paper>
+//         </Grid>
+//       </Grid>
+
+//       {/* Confirm Step Completion Dialog */}
+//       <Dialog open={confirmDialog} onClose={() => setConfirmDialog(false)} maxWidth="sm" fullWidth>
+//         <DialogTitle>
+//           Confirm Step Completion
+//         </DialogTitle>
+//         <DialogContent>
+//           <Typography variant="body1" mb={2}>
+//             Are you ready to mark this step as complete? This will be saved to the database.
+//           </Typography>
+//           <Typography variant="h6" mb={2} color="primary">
+//             Step {steps[activeStep]?.number}: {steps[activeStep]?.name}
+//           </Typography>
+//           <Typography variant="body2" mb={2} color="textSecondary">
+//             Expected duration: {formatDuration(steps[activeStep]?.duration)} | Temperature: {steps[activeStep]?.temperature}°C
+//           </Typography>
+//         </DialogContent>
+//         <DialogActions>
+//           <Button onClick={() => setConfirmDialog(false)} disabled={loading}>
+//             Cancel
+//           </Button>
+//           <Button 
+//             onClick={handleConfirmStepCompletion}
+//             variant="contained"
+//             color="success"
+//             disabled={loading}
+//           >
+//             {loading ? 'Saving...' : 'Complete Step'}
+//           </Button>
+//         </DialogActions>
+//       </Dialog>
+//     </Box>
+//   );
+// }
+
+// export default ProductionSteps;
+ return (
+    <Box width="99vw">
       {/* Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Box>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} width="97vw">
+        <Box width="90vw"> 
           <Button 
             startIcon={<ArrowBack />}
             onClick={onBackToSelection}
@@ -411,92 +684,109 @@ function ProductionSteps({ selectedBatch, onBackToSelection, onProductionComplet
         </Typography>
       </Alert>
 
-      {/* Main Content Grid */}
-      <Grid container spacing={3}>
-        {/* Left Column - Sensor Data */}
-        <Grid item xs={12} lg={4}>
-          <Box sx={{ position: 'sticky', top: 24 }}>
-            <SensorDataDisplay />
-          </Box>
-        </Grid>
+      {/* Main Content Grid - Centered with proper spacing */}
+      <Box sx={{ 
+        height: 'calc(100vh - 300px)',
+        display: 'flex',
+        justifyContent: 'center',
+        px: 2
+      }}>
+        <Grid container spacing={4} sx={{ maxWidth: '1400px', width: '100%', justifyContent: "space-evenly"}}>
+          {/* Left Column - Sensor Data */}
+          <Grid item xs={12} lg={5}>
+            <Box sx={{ 
+              position: 'sticky', 
+              top: 24,
+              maxHeight: 'calc(100vh - 320px)',
+              overflow: 'auto'
+            }}>
+              <SensorDataDisplay />
+            </Box>
+          </Grid>
 
-        {/* Right Column - Production Steps */}
-        <Grid item xs={12} lg={8}>
-          {/* Start Production Button */}
-          {!productionStarted && (
-            <Alert severity="warning" sx={{ mb: 3 }}>
-              <Box display="flex" justifyContent="space-between" alignItems="center">
-                <Typography>Ready to start production? This will update the batch status to 'start-processing'.</Typography>
-                <Button 
-                  variant="contained"
-                  startIcon={<PlayArrow />}
-                  onClick={handleStartProduction}
-                  disabled={loading}
-                  sx={{ ml: 2 }}
-                >
-                  {loading ? 'Starting...' : 'Start Production'}
-                </Button>
-              </Box>
-            </Alert>
-          )}
-
-          {/* Production Steps */}
-          <Paper elevation={2} sx={{ p: 3 }}>
-            <Stepper activeStep={activeStep} orientation="vertical">
-              {steps.map((step, index) => {
-                const status = getStepStatus(index);
-                const isCompleted = status === 'completed';
-                const isActive = status === 'active';
-
-                // Get completion data from database if available
-                const completionData = selectedBatch.currentSteps?.find(
-                  dbStep => dbStep.stepNumber === index + 1 && dbStep.completed
-                ) || completedSteps.find(cs => cs.stepNumber === index + 1);
-
-                return (
-                  <Step key={index} completed={isCompleted}>
-                    <StepLabel
-                      icon={isCompleted ? <CheckCircle color="success" /> : undefined}
-                      sx={{
-                        '& .MuiStepLabel-label': {
-                          fontWeight: isActive ? 'bold' : 'normal',
-                          color: isActive ? 'primary.main' : 'inherit'
-                        }
-                      }}
+          {/* Right Column - Production Steps with proper scrolling */}
+          <Grid item xs={12} lg={7} sx={{ height: '100%', overflow: 'hidden' }}>
+            <Box sx={{ 
+              height: '100%', 
+              display: 'flex', 
+              flexDirection: 'column' 
+            }}>
+              {/* Start Production Button - Fixed at top */}
+              {!productionStarted && (
+                <Alert severity="" sx={{ mb: 3, flexShrink: 0 }}>
+                  <Box display="flex" justifyContent="space-between" alignItems="center">
+                    {/* <Typography>Ready to start production? This will update the batch status to 'start-processing'.</Typography> */}
+                    <Button 
+                      variant="contained"
+                      startIcon={<PlayArrow />}
+                      onClick={handleStartProduction}
+                      disabled={loading}
+                      sx={{ ml: 2 }}
                     >
-                      <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
-                        <Typography variant="h6">
-                          Step {step.number}: {step.name}
-                        </Typography>
-                        {isActive && (
-                          <Chip 
-                            label="In Progress" 
-                            color="primary" 
-                            size="small"
-                            icon={<Timer />}
-                          />
-                        )}
-                        {isCompleted && (
-                          <Chip 
-                            label="Completed" 
-                            color="success" 
-                            size="small"
-                            icon={<Done />}
-                          />
-                        )}
-                      </Box>
-                    </StepLabel>
+                      {loading ? 'Starting...' : 'Start Production'}
+                    </Button>
+                  </Box>
+                </Alert>
+              )}
 
-                    <StepContent>
-                      <Card variant="outlined" sx={{ mt: 2, mb: 2 }}>
-                        <CardContent>
-                          {/* Step Instructions */}
-                          <Typography variant="body1" mb={2} sx={{ fontStyle: 'italic' }}>
-                            "{step.instructions}"
-                          </Typography>
+              {/* Production Steps - Scrollable area */}
+              <Paper 
+                elevation={2} 
+                sx={{ 
+                  p: 3, 
+                  flex: 1, // Take remaining space
+                  overflow: 'auto', // Enable scrolling
+                  minHeight: 0 // Important for flex scrolling
+                }}
+              >
+                <Stepper activeStep={activeStep} orientation="vertical">
+                  {steps.map((step, index) => {
+                    const status = getStepStatus(index);
+                    const isCompleted = status === 'completed';
+                    const isActive = status === 'active';
 
-                          {/* Step Parameters */}
-                          <Box display="flex" gap={2} mb={2} flexWrap="wrap">
+                    // Get completion data from database if available
+                    const completionData = selectedBatch.currentSteps?.find(
+                      dbStep => dbStep.stepNumber === index + 1 && dbStep.completed
+                    ) || completedSteps.find(cs => cs.stepNumber === index + 1);
+
+                    return (
+                      <Step key={index} completed={isCompleted}>
+                        <StepLabel
+                          icon={isCompleted ? <CheckCircle color="success" /> : undefined}
+                          sx={{
+                            '& .MuiStepLabel-label': {
+                              fontWeight: isActive ? 'bold' : 'normal',
+                              color: isActive ? 'primary.main' : 'inherit'
+                            }
+                          }}
+                        >
+                          <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
+                            <Typography variant="h6">
+                              Step {step.number}: {step.name}
+                            </Typography>
+                            {isActive && (
+                              <Chip 
+                                label="In Progress" 
+                                color="primary" 
+                                size="small"
+                                icon={<Timer />}
+                              />
+                            )}
+                            {isCompleted && (
+                              <Chip 
+                                label="Completed" 
+                                color="success" 
+                                size="small"
+                                icon={<Done />}
+                              />
+                            )}
+                          </Box>
+                        </StepLabel>
+
+                        <StepContent>
+                          {/* Step Parameters - Fixed, no scroll */}
+                          <Box display="flex" gap={2} mb={2} flexWrap="wrap" justifyContent="center" sx={{ pr: 1 }}>
                             <Chip 
                               label={`Expected: ${formatDuration(step.duration)}`}
                               icon={<Timer />}
@@ -520,77 +810,93 @@ function ProductionSteps({ selectedBatch, onBackToSelection, onProductionComplet
                             )}
                           </Box>
 
-                          {/* Action Buttons */}
-                          {isActive && productionStarted && (
-                            <Box display="flex" gap={2} mt={2}>
-                              <Button 
-                                variant="contained"
-                                onClick={handleCompleteStep}
-                                startIcon={<CheckCircle />}
-                                color="success"
-                                disabled={loading}
-                              >
-                                Complete Step
-                              </Button>
-                            </Box>
-                          )}
-
-                          {/* Completed Step Info - show data from database */}
-                          {isCompleted && completionData && (
-                            <Box mt={2} p={2} bgcolor="success.light" borderRadius={1}>
-                              <Typography variant="body2" color="success.dark">
-                                ✓ Completed {completionData.completedAt && `at ${new Date(completionData.completedAt).toLocaleTimeString()}`}
-                              </Typography>
-                              {completionData.actualDuration && (
-                                <Typography variant="body2" color="success.dark">
-                                  Actual duration: {formatDuration(completionData.actualDuration)} 
-                                  {step.duration !== completionData.actualDuration && (
-                                    <span> (Expected: {formatDuration(step.duration)})</span>
-                                  )}
+                          {/* Scrollable step content */}
+                          <Box sx={{ 
+                            maxHeight: 300, 
+                            overflow: 'auto',
+                            pr: 1 
+                          }}>
+                            <Card variant="outlined" sx={{ mt: 1, mb: 2 }}>
+                              <CardContent>
+                                {/* Step Instructions */}
+                                <Typography variant="body1" mb={2} sx={{ fontStyle: 'italic' }}>
+                                  "{step.instructions}"
                                 </Typography>
-                              )}
-                              {completionData.notes && (
-                                <Typography variant="body2" color="success.dark" sx={{ mt: 1, fontStyle: 'italic' }}>
-                                  Notes: {completionData.notes}
-                                </Typography>
-                              )}
-                            </Box>
-                          )}
-                        </CardContent>
-                      </Card>
-                    </StepContent>
-                  </Step>
-                );
-              })}
-            </Stepper>
 
-            {/* Production Complete */}
-            {shouldShowCompletion && (
-              <Box mt={4} p={3} bgcolor="success.light" borderRadius={2} textAlign="center">
-                <CheckCircle sx={{ fontSize: 48, color: 'success.main', mb: 2 }} />
-                <Typography variant="h5" color="success.dark" fontWeight="bold" mb={1}>
-                  Processing Complete!
-                </Typography>
-                <Typography variant="body1" color="success.dark" mb={2}>
-                  All {steps.length} steps completed successfully. Batch #{currentBatch?.id} is ready for packaging.
-                </Typography>
-                <Typography variant="body2" color="success.dark" mb={2}>
-                  Total Production Time: {formatDuration(Object.values(stepTimers).reduce((sum, time) => sum + time, 0))}
-                </Typography>
-                <Button 
-                  variant="contained"
-                  color="success"
-                  size="large"
-                  onClick={onBackToSelection}
-                  disabled={loading}
-                >
-                  Return to Batch Selection
-                </Button>
-              </Box>
-            )}
-          </Paper>
+                                {/* Action Buttons */}
+                                {isActive && productionStarted && (
+                                  <Box display="flex" gap={2} mt={2} justifyContent="center">
+                                    <Button 
+                                      variant="contained"
+                                      onClick={handleCompleteStep}
+                                      startIcon={<CheckCircle />}
+                                      color="success"
+                                      disabled={loading}
+                                    >
+                                      Complete Step
+                                    </Button>
+                                  </Box>
+                                )}
+
+                                {/* Completed Step Info - show data from database */}
+                                {isCompleted && completionData && (
+                                  <Box mt={2} p={2} bgcolor="success.light" borderRadius={1}>
+                                    <Typography variant="body2" color="success.dark">
+                                      ✓ Completed {completionData.completedAt && `at ${new Date(completionData.completedAt).toLocaleTimeString()}`}
+                                    </Typography>
+                                    {completionData.actualDuration && (
+                                      <Typography variant="body2" color="success.dark">
+                                        Actual duration: {formatDuration(completionData.actualDuration)} 
+                                        {step.duration !== completionData.actualDuration && (
+                                          <span> (Expected: {formatDuration(step.duration)})</span>
+                                        )}
+                                      </Typography>
+                                    )}
+                                    {completionData.notes && (
+                                      <Typography variant="body2" color="success.dark" sx={{ mt: 1, fontStyle: 'italic' }}>
+                                        Notes: {completionData.notes}
+                                      </Typography>
+                                    )}
+                                  </Box>
+                                )}
+                              </CardContent>
+                            </Card>
+                          </Box>
+                        </StepContent>
+                      </Step>
+                    );
+                  })}
+                </Stepper>
+
+                {/* Production Complete */}
+                {shouldShowCompletion && (
+                  <Box mt={4} p={3} bgcolor="success.light" borderRadius={2} textAlign="center">
+                    <CheckCircle sx={{ fontSize: 48, color: 'success.main', mb: 2 }} />
+                    <Typography variant="h5" color="success.dark" fontWeight="bold" mb={1}>
+                      Processing Complete!
+                    </Typography>
+                    <Typography variant="body1" color="success.dark" mb={2}>
+                      All {steps.length} steps completed successfully. Batch #{currentBatch?.id} is ready for packaging.
+                    </Typography>
+                    <Typography variant="body2" color="success.dark" mb={2}>
+                      Total Production Time: {formatDuration(Object.values(stepTimers).reduce((sum, time) => sum + time, 0))}
+                    </Typography>
+                    <Button 
+                      variant="contained"
+                      color="success"
+                      size="large"
+                      onClick={onBackToSelection}
+                      disabled={loading}
+                    >
+                      Return to Batch Selection
+                    </Button>
+                  </Box>
+                )}
+              </Paper>
+            </Box>
+          </Grid>
         </Grid>
-      </Grid>
+      </Box>
 
       {/* Confirm Step Completion Dialog */}
       <Dialog open={confirmDialog} onClose={() => setConfirmDialog(false)} maxWidth="sm" fullWidth>

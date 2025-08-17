@@ -115,7 +115,7 @@ function FactoryDashboard() {
   };
 
   return (
-    <Box sx={{ p: 3, minHeight: '100vh', backgroundColor: '#f5f5f5', position: 'fixed', top: 0, left: -4 }}>
+    <Box sx={{ p: 3, width : "100%", minHeight: '100vh', backgroundColor: '#f5f5f5', position: 'fixed', top: 0, left: -4 }}>
       {/* Main Content */}
       {currentView === 'selection' ? (
         <ProductSelection 
@@ -147,34 +147,6 @@ function FactoryDashboard() {
           {notification.message}
         </Alert>
       </Snackbar>
-
-      {/* Development Helper - Show current state
-      {process.env.NODE_ENV === 'development' && (
-        <Box 
-          sx={{ 
-            position: 'fixed', 
-            bottom: 16, 
-            left: 16, 
-            p: 2, 
-            bgcolor: 'rgba(0,0,0,0.8)', 
-            color: 'white', 
-            borderRadius: 1,
-            fontSize: '0.75rem',
-            maxWidth: 300,
-            zIndex: 1000
-          }}
-        >
-          <div>View: {currentView}</div>
-          <div>Resume Mode: {resumeMode.toString()}</div>
-          {selectedProduct && (
-            <>
-              <div>Batch ID: {selectedProduct.id}</div>
-              <div>Product: {selectedProduct.Product?.name}</div>
-              <div>Stage: {selectedProduct.stage}</div>
-            </>
-          )}
-        </Box>
-      )} */}
     </Box>
   );
 }
