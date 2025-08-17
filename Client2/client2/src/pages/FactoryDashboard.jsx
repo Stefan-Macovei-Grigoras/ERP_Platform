@@ -115,7 +115,7 @@ function FactoryDashboard() {
   };
 
   return (
-    <Box sx={{ p: 3, minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
+    <Box sx={{ p: 3, minHeight: '100vh', backgroundColor: '#f5f5f5', position: 'fixed', top: 0, left: -4 }}>
       {/* Main Content */}
       {currentView === 'selection' ? (
         <ProductSelection 

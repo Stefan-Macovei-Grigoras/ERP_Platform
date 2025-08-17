@@ -532,13 +532,6 @@ function ProductionSteps({ selectedBatch, onBackToSelection, onProductionComplet
                               >
                                 Complete Step
                               </Button>
-                              <Button 
-                                variant="outlined"
-                                startIcon={<Pause />}
-                                disabled={loading}
-                              >
-                                Pause
-                              </Button>
                             </Box>
                           )}
 
@@ -614,15 +607,6 @@ function ProductionSteps({ selectedBatch, onBackToSelection, onProductionComplet
           <Typography variant="body2" mb={2} color="textSecondary">
             Expected duration: {formatDuration(steps[activeStep]?.duration)} | Temperature: {steps[activeStep]?.temperature}°C
           </Typography>
-          <TextField
-            label="Notes (optional)"
-            multiline
-            rows={3}
-            fullWidth
-            value={stepNotes}
-            onChange={(e) => setStepNotes(e.target.value)}
-            placeholder="Add any observations, deviations, or notes about this step..."
-          />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setConfirmDialog(false)} disabled={loading}>
