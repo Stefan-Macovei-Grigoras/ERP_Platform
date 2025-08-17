@@ -1,3 +1,5 @@
+
+
 // import React, { useState } from 'react';
 // import { Box, useTheme, useMediaQuery } from '@mui/material';
 
@@ -12,6 +14,9 @@
 // import ProductCatalog from '../components/admin/ProductCatalog';
 // import InventoryOverview from '../components/admin/InventoryOverview';
 // import AdminQuickActions from '../components/admin/AdminQuickActions';
+
+// // Packaging component
+// import PackagingDashboard from '../pages/PackagingDashboard';
 
 // const drawerWidth = 280;
 
@@ -47,6 +52,8 @@
 //         return <InventoryOverview />;
 //       case 'batches':
 //         return <BatchTable showAll={true} allowManagement={true} />;
+//       case 'packaging':
+//         return <PackagingDashboard />;
 //       case 'overview':
 //       default:
 //         return (
@@ -79,6 +86,12 @@
 //                 value="3" 
 //                 color="#ed6c02"
 //                 change="Requires attention"
+//               />
+//               <StatsCard 
+//                 title="Ready for Packaging" 
+//                 value="4" 
+//                 color="#ff9800"
+//                 change="Processing complete"
 //               />
 //             </Box>
 
@@ -148,8 +161,8 @@
 
 // export default AdminDashboard;
 
-import React, { useState } from 'react';
-import { Box, useTheme, useMediaQuery } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, useTheme, useMediaQuery, CircularProgress } from '@mui/material';
 
 // Shared components
 import Header from '../components/shared/Header';
@@ -166,13 +179,93 @@ import AdminQuickActions from '../components/admin/AdminQuickActions';
 // Packaging component
 import PackagingDashboard from '../pages/PackagingDashboard';
 
+// API service
+import factoryApiService from '../services/factory/factoryApiService';
+
 const drawerWidth = 280;
 
 function AdminDashboard() {
   const [currentPage, setCurrentPage] = useState('overview');
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [statsData, setStatsData] = useState({
+    totalUsers: 0,
+    activeBatches: 0,
+    totalProducts: 0,
+    lowStockItems: 0,
+    readyForPackaging: 0,
+    loading: true,
+    error: null
+  });
+  
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
+  // Fetch dashboard statistics
+  useEffect(() => {
+    const fetchDashboardStats = async () => {
+      try {
+        setStatsData(prev => ({ ...prev, loading: true, error: null }));
+        
+        // Fetch data from multiple endpoints
+        const [batches, products, users] = await Promise.all([
+          factoryApiService.makeRequest('/batch'),
+          factoryApiService.makeRequest('/product'),
+          factoryApiService.makeRequest('/user').catch(() => []) // Users endpoint might not exist
+        ]);
+
+        // Calculate statistics from the data
+        const activeBatches = batches.filter(batch => 
+          ['due', 'start-processing', 'end-processing'].includes(batch.stage)
+        ).length;
+
+        const readyForPackaging = batches.filter(batch => 
+          batch.stage === 'end-processing'
+        ).length;
+
+        const inProgressBatches = batches.filter(batch => 
+          batch.stage === 'start-processing'
+        ).length;
+
+        // Calculate low stock items (products with quantity <= 2)
+        const lowStockItems = products.filter(product => 
+          product.quantity <= 2
+        ).length;
+
+        // Get recent activity (batches updated in last 24 hours)
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        
+        const recentBatches = batches.filter(batch => {
+          const updatedAt = new Date(batch.updatedAt);
+          return updatedAt > yesterday;
+        }).length;
+
+        setStatsData({
+          totalUsers: users.length || 8, // Fallback to hardcoded if endpoint doesn't exist
+          activeBatches: activeBatches,
+          inProgressBatches: inProgressBatches,
+          totalProducts: products.length,
+          lowStockItems: lowStockItems,
+          readyForPackaging: readyForPackaging,
+          recentActivity: recentBatches,
+          loading: false,
+          error: null
+        });
+
+      } catch (error) {
+        console.error('Failed to fetch dashboard statistics:', error);
+        setStatsData(prev => ({
+          ...prev,
+          loading: false,
+          error: 'Failed to load statistics'
+        }));
+      }
+    };
+
+    if (currentPage === 'overview') {
+      fetchDashboardStats();
+    }
+  }, [currentPage]);
 
   // Handle mobile drawer toggle
   const handleDrawerToggle = () => {
@@ -181,13 +274,10 @@ function AdminDashboard() {
 
   // Handle page navigation
   const handlePageChange = (page) => {
-    console.log('handlePageChange called with:', page); // Debug log
+    console.log('handlePageChange called with:', page);
     setCurrentPage(page);
     if (isMobile) setMobileOpen(false);
   };
-
-  // Debug log to verify function exists
-  console.log('handlePageChange function:', typeof handlePageChange);
 
   // Render content based on current page
   const renderContent = () => {
@@ -211,36 +301,69 @@ function AdminDashboard() {
               flexWrap: { xs: 'wrap', sm: 'nowrap' },
               '& > *': { minWidth: { xs: '100%', sm: '200px' } }
             }}>
-              <StatsCard 
-                title="Total Users" 
-                value="8" 
-                color="#1976d2"
-                change="2 online now"
-              />
-              <StatsCard 
-                title="Active Batches" 
-                value="12" 
-                color="#2e7d32"
-                change="+2 from yesterday"
-              />
-              <StatsCard 
-                title="Products" 
-                value="5" 
-                color="#9c27b0"
-                change="All in production"
-              />
-              <StatsCard 
-                title="Low Stock Items" 
-                value="3" 
-                color="#ed6c02"
-                change="Requires attention"
-              />
-              <StatsCard 
-                title="Ready for Packaging" 
-                value="4" 
-                color="#ff9800"
-                change="Processing complete"
-              />
+              {statsData.loading ? (
+                // Loading state
+                Array.from({ length: 5 }).map((_, index) => (
+                  <Box key={index} sx={{ 
+                    minWidth: { xs: '100%', sm: '200px' },
+                    height: '120px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: 'white',
+                    borderRadius: 2,
+                    boxShadow: 1
+                  }}>
+                    <CircularProgress size={24} />
+                  </Box>
+                ))
+              ) : statsData.error ? (
+                // Error state
+                <Box sx={{ 
+                  width: '100%',
+                  p: 2,
+                  backgroundColor: '#ffebee',
+                  color: '#c62828',
+                  borderRadius: 1,
+                  textAlign: 'center'
+                }}>
+                  {statsData.error}
+                </Box>
+              ) : (
+                // Real data
+                <>
+                  <StatsCard 
+                    title="Total Users" 
+                    value={statsData.totalUsers.toString()} 
+                    color="#1976d2"
+                    change={`${statsData.totalUsers > 0 ? 'Active' : 'No'} users`}
+                  />
+                  <StatsCard 
+                    title="Active Batches" 
+                    value={statsData.activeBatches.toString()} 
+                    color="#2e7d32"
+                    change={`${statsData.inProgressBatches} in progress`}
+                  />
+                  <StatsCard 
+                    title="Products" 
+                    value={statsData.totalProducts.toString()} 
+                    color="#9c27b0"
+                    change={`${statsData.totalProducts > 0 ? 'Available' : 'None'} in catalog`}
+                  />
+                  <StatsCard 
+                    title="Low Stock Items" 
+                    value={statsData.lowStockItems.toString()} 
+                    color={statsData.lowStockItems > 0 ? "#ed6c02" : "#4caf50"}
+                    change={statsData.lowStockItems > 0 ? "Requires attention" : "Stock levels OK"}
+                  />
+                  <StatsCard 
+                    title="Ready for Packaging" 
+                    value={statsData.readyForPackaging.toString()} 
+                    color="#ff9800"
+                    change={`${statsData.readyForPackaging > 0 ? 'Processing complete' : 'None ready'}`}
+                  />
+                </>
+              )}
             </Box>
 
             {/* Main Dashboard Content */}

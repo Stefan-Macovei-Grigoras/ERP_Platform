@@ -6,13 +6,13 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer
+  ResponsiveContainer,
+  Legend
 } from 'recharts';
 
 function SensorDataDisplay() {
   const [sensorData, setSensorData] = useState({
     temperature: null,
-    humidity: null,
     timestamp: null
   });
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
@@ -24,7 +24,7 @@ function SensorDataDisplay() {
   useEffect(() => {
     const connectWebSocket = () => {
       try {
-        const ws = new WebSocket('ws://localhost:5000/ws'); // Updated to localhost
+        const ws = new WebSocket('ws://localhost:5000/ws');
         wsRef.current = ws;
 
         ws.onopen = () => {
@@ -37,27 +37,25 @@ function SensorDataDisplay() {
           try {
             const data = JSON.parse(event.data);
             
-            if (data.temperature !== undefined && data.humidity !== undefined) {
+            if (data.temperature !== undefined) {
               const timestamp = new Date();
               const newSensorData = {
                 temperature: parseFloat(data.temperature),
-                humidity: parseFloat(data.humidity),
                 timestamp: timestamp
               };
 
               setSensorData(newSensorData);
 
-              // Add to chart data (keep last 15 readings for compact view)
+              // Add to chart data (keep last 20 readings for better trend visibility)
               setChartData(prevData => {
                 const newDataPoint = {
                   time: timestamp.toLocaleTimeString().slice(0, 5), // HH:MM format
                   temperature: newSensorData.temperature,
-                  humidity: newSensorData.humidity,
                   timestamp: timestamp.getTime()
                 };
 
                 const updatedData = [...prevData, newDataPoint];
-                return updatedData.slice(-15); // Keep only last 15 points
+                return updatedData.slice(-20); // Keep only last 20 points
               });
             }
           } catch (err) {
@@ -105,6 +103,29 @@ function SensorDataDisplay() {
     }
   };
 
+  // Custom legend component
+  const CustomLegend = () => (
+    <div style={{ 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center',
+      gap: '8px',
+      marginBottom: '8px',
+      fontSize: '12px',
+      color: '#666'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <div style={{ 
+          width: '12px', 
+          height: '2px', 
+          backgroundColor: '#f44336',
+          borderRadius: '1px'
+        }}></div>
+        <span>Temperature (°C)</span>
+      </div>
+    </div>
+  );
+
   return (
     <div style={{ 
       backgroundColor: 'white',
@@ -121,70 +142,65 @@ function SensorDataDisplay() {
         alignItems: 'center'
       }}>
         <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 'bold' }}>
-          Environmental Data
+          Cauldron Temperature
         </h3>
         <div style={{ 
           display: 'flex', 
           alignItems: 'center', 
           gap: '6px',
-          padding: '2px 8px',
+          padding: '4px 8px',
           borderRadius: '12px',
           backgroundColor: getConnectionStatusColor(),
           color: 'white',
-          fontSize: '0.75rem'
+          fontSize: '0.75rem',
+          fontWeight: '500'
         }}>
           <span style={{ fontSize: '0.8rem' }}>
             {connectionStatus === 'connected' ? '●' : '○'}
           </span>
-          {connectionStatus}
+          {connectionStatus.charAt(0).toUpperCase() + connectionStatus.slice(1)}
         </div>
       </div>
 
       {error && (
         <div style={{ 
-          padding: '8px 16px', 
+          padding: '12px 16px', 
           backgroundColor: '#ffebee', 
           borderLeft: '3px solid #f44336',
           color: '#c62828',
-          fontSize: '0.875rem'
+          fontSize: '0.875rem',
+          fontWeight: '500'
         }}>
           {error}
         </div>
       )}
 
-      {/* Current Values - Compact Layout */}
-      <div style={{ padding: '16px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-          {/* Temperature */}
+      {/* Current Temperature Display */}
+      <div style={{ padding: '20px' }}>
+        <div style={{ 
+          textAlign: 'center',
+          padding: '20px',
+          backgroundColor: '#f8f9fa',
+          borderRadius: '12px',
+          border: '2px solid #ddd',
+          marginBottom: '20px'
+        }}>
           <div style={{ 
-            textAlign: 'center',
-            padding: '12px',
-            backgroundColor: '#fff3e0',
-            borderRadius: '8px',
-            border: '1px solid #ffcc02'
+            fontSize: '0.875rem', 
+            color: '#666', 
+            marginBottom: '8px',
+            fontWeight: '500'
           }}>
-            <div style={{ fontSize: '0.75rem', color: '#e65100', marginBottom: '4px' }}>
-              🌡️ Temperature
-            </div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#e65100' }}>
-              {sensorData.temperature !== null ? `${sensorData.temperature.toFixed(1)}°C` : '--'}
-            </div>
+            Cauldron Temperature
           </div>
-
-          {/* Humidity */}
           <div style={{ 
-            textAlign: 'center',
-            padding: '12px',
-            backgroundColor: '#e3f2fd',
-            borderRadius: '8px',
-            border: '1px solid #2196f3'
+            fontSize: '3rem', 
+            fontWeight: 'bold', 
+            color: '#333',
+            lineHeight: '1',
+            marginBottom: '8px'
           }}>
-            <div style={{ fontSize: '0.75rem', color: '#1565c0', marginBottom: '4px' }}>
-              💧 Humidity
-            </div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1565c0' }}>
-              {sensorData.humidity !== null ? `${sensorData.humidity.toFixed(1)}%` : '--'}
-            </div>
+            {sensorData.temperature !== null ? `${sensorData.temperature.toFixed(1)}°C` : '--°C'}
           </div>
         </div>
 
@@ -192,77 +208,96 @@ function SensorDataDisplay() {
         {sensorData.timestamp && (
           <div style={{ 
             textAlign: 'center', 
-            fontSize: '0.75rem', 
+            fontSize: '0.8rem', 
             color: '#666',
-            marginBottom: '16px'
+            marginBottom: '20px',
+            backgroundColor: '#f0f0f0',
+            padding: '8px',
+            borderRadius: '6px'
           }}>
             Last updated: {sensorData.timestamp.toLocaleTimeString()}
           </div>
         )}
 
-        {/* Compact Chart */}
+        {/* Temperature Trend Chart */}
         <div style={{ 
-          height: '200px',
           backgroundColor: '#fafafa',
-          borderRadius: '6px',
+          borderRadius: '8px',
           padding: '8px'
         }}>
-          <div style={{ fontSize: '0.875rem', fontWeight: '500', marginBottom: '8px', color: '#666' }}>
-            Recent Readings
+          <div style={{ 
+            fontSize: '1rem', 
+            fontWeight: '600', 
+            marginBottom: '12px', 
+            color: '#333',
+            textAlign: 'center'
+          }}>
+            Temperature Trend (Last 20 Readings)
           </div>
+          
           {chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height="85%">
-              <LineChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                <XAxis 
-                  dataKey="time" 
-                  tick={{ fontSize: 10 }}
-                  axisLine={false}
-                  tickLine={false}
-                  interval="preserveStartEnd"
-                />
-                <YAxis hide />
-                <Tooltip
-                  labelStyle={{ fontSize: '12px' }}
-                  contentStyle={{ 
-                    fontSize: '12px',
-                    padding: '6px',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px'
-                  }}
-                  formatter={(value, name) => [
-                    `${parseFloat(value).toFixed(1)}${name === 'temperature' ? '°C' : '%'}`,
-                    name === 'temperature' ? 'Temp' : 'Humidity'
-                  ]}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="temperature"
-                  stroke="#f44336"
-                  strokeWidth={2}
-                  dot={false}
-                  activeDot={{ r: 3 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="humidity"
-                  stroke="#2196f3"
-                  strokeWidth={2}
-                  dot={false}
-                  activeDot={{ r: 3 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <div style={{ height: '250px' }}>
+              <CustomLegend />
+              <ResponsiveContainer width="100%" height="90%">
+                <LineChart 
+                  data={chartData} 
+                  margin={{ top: 7, right: 10, left: 3, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                  <XAxis 
+                    dataKey="time" 
+                    tick={{ fontSize: 11, fill: '#666' }}
+                    axisLine={{ stroke: '#ddd' }}
+                    tickLine={{ stroke: '#ddd' }}
+                    interval="preserveStartEnd"
+                  />
+                  <YAxis 
+                    tick={{ fontSize: 11, fill: '#666' }}
+                    axisLine={{ stroke: '#ddd' }}
+                    tickLine={{ stroke: '#ddd' }}
+                    domain={['dataMin - 2', 'dataMax + 2']}
+                    width={25}
+                  />
+                  <Tooltip
+                    labelStyle={{ fontSize: '12px', fontWeight: '500' }}
+                    contentStyle={{ 
+                      fontSize: '12px',
+                      padding: '8px 12px',
+                      border: '1px solid #ddd',
+                      borderRadius: '6px',
+                      backgroundColor: 'rgba(255,255,255,0.95)',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                    }}
+                    formatter={(value, name) => [
+                      `${parseFloat(value).toFixed(1)}°C`,
+                      'Temperature'
+                    ]}
+                    labelFormatter={(label) => `Time: ${label}`}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="temperature"
+                    stroke="#666"
+                    strokeWidth={2}
+                    dot={{ fill: '#666', strokeWidth: 1, r: 2 }}
+                    activeDot={{ r: 3, stroke: '#666', strokeWidth: 1, fill: '#fff' }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           ) : (
             <div style={{ 
               display: 'flex', 
               justifyContent: 'center', 
               alignItems: 'center', 
-              height: '85%',
+              height: '300px',
               color: '#999',
-              fontSize: '0.875rem'
+              fontSize: '0.875rem',
+              backgroundColor: '#f5f5f5',
+              borderRadius: '6px',
+              border: '2px dashed #ddd'
             }}>
-              Waiting for data...
+              Waiting for temperature data...
             </div>
           )}
         </div>
@@ -272,3 +307,4 @@ function SensorDataDisplay() {
 }
 
 export default SensorDataDisplay;
+

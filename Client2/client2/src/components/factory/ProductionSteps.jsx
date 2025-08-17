@@ -1023,13 +1023,6 @@ function ProductionSteps({ selectedBatch, onBackToSelection, onProductionComplet
                               >
                                 Complete Step
                               </Button>
-                              <Button 
-                                variant="outlined"
-                                startIcon={<Pause />}
-                                disabled={loading}
-                              >
-                                Pause
-                              </Button>
                             </Box>
                           )}
 

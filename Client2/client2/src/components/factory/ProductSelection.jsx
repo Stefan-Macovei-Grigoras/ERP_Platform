@@ -147,9 +147,7 @@ function ProductSelection({ onProductSelect }) {
           <Typography variant="h5" fontWeight="bold">
             Available Batches for Production
           </Typography>
-          <Typography variant="body2" color="textSecondary">
-            Select a batch that's ready to start production
-          </Typography>
+      
         </Box>
         <Button 
           variant="outlined" 

@@ -372,12 +372,6 @@ function BatchTable({
               Create Batch
             </Button>
           )}
-          
-          {showAll && (
-            <Button variant="outlined" size="small">
-              Export Data
-            </Button>
-          )}
         </Box>
       </Box>
 

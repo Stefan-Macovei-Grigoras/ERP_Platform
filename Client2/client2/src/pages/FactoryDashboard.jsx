@@ -148,7 +148,7 @@ function FactoryDashboard() {
         </Alert>
       </Snackbar>
 
-      {/* Development Helper - Show current state */}
+      {/* Development Helper - Show current state
       {process.env.NODE_ENV === 'development' && (
         <Box 
           sx={{ 
@@ -174,7 +174,7 @@ function FactoryDashboard() {
             </>
           )}
         </Box>
-      )}
+      )} */}
     </Box>
   );
 }

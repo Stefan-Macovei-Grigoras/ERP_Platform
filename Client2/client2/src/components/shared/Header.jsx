@@ -116,7 +116,6 @@ function Header({ title, currentPage, drawerWidth, onDrawerToggle, userRole = 'a
           {getPageTitle()}
         </Typography>
 
-        {/* User role badge */}
         <Box sx={{ mr: 2, display: { xs: 'none', sm: 'block' } }}>
           <Typography variant="body2" sx={{ 
             bgcolor: 'rgba(255,255,255,0.2)', 
@@ -130,7 +129,7 @@ function Header({ title, currentPage, drawerWidth, onDrawerToggle, userRole = 'a
         </Box>
 
 
-        {/* User profile icon with dropdown */}
+        {/* User profile icon with dropdown
         <IconButton color="inherit" sx={{ ml: 1 }} onClick={handleProfileClick}>
           <Avatar sx={{ width: 32, height: 32, bgcolor: 'rgba(255,255,255,0.2)' }}>
             <Person />
@@ -138,7 +137,7 @@ function Header({ title, currentPage, drawerWidth, onDrawerToggle, userRole = 'a
         </IconButton>
 
         {/* Profile dropdown menu */}
-        <Menu
+        {/* <Menu
           anchorEl={profileAnchor}
           open={Boolean(profileAnchor)}
           onClose={handleProfileClose}
@@ -170,7 +169,7 @@ function Header({ title, currentPage, drawerWidth, onDrawerToggle, userRole = 'a
             </ListItemIcon>
             <ListItemText primary="Logout" />
           </MenuItem>
-        </Menu>
+        </Menu> */} 
       </Toolbar>
     </AppBar>
   );
