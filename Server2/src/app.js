@@ -15,13 +15,12 @@ app.use(express.json());
 // Rate limiter (prevent abuse)
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 1000,
 });
 app.use(limiter);
 
 // Routes
 const indexRoutes = require('./routes/index');
-app.use(express.json());
 app.use(indexRoutes);
 
 // Optional: Error handling middleware
