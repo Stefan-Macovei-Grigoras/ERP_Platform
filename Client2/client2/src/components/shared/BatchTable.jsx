@@ -1,5 +1,3 @@
-
-
 // import React, { useState, useEffect } from 'react';
 // import {
 //   Box,
@@ -55,6 +53,63 @@
 //   LocalDining
 // } from '@mui/icons-material';
 // import adminApiService from '../../services/admin/adminApiService';
+
+// // Helper function to get last completed step
+// const getLastCompletedStep = (batch) => {
+//   if (!batch.currentSteps || !Array.isArray(batch.currentSteps)) {
+//     return 'No steps tracked';
+//   }
+  
+//   const completedSteps = batch.currentSteps.filter(step => step.completed);
+//   if (completedSteps.length === 0) {
+//     return 'No steps completed';
+//   }
+  
+//   // Get the highest step number that's completed
+//   const lastCompleted = completedSteps.reduce((max, step) => 
+//     step.stepNumber > max.stepNumber ? step : max
+//   );
+  
+//   return `Step ${lastCompleted.stepNumber}: ${lastCompleted.name}`;
+// };
+
+// // Helper function to calculate estimated completion time
+// const getEstimatedCompletion = (batch) => {
+//   if (!batch.Product?.Recipe?.steps?.steps || !batch.currentSteps) {
+//     return 'Unable to calculate';
+//   }
+  
+//   const recipeSteps = batch.Product.Recipe.steps.steps;
+//   const currentSteps = batch.currentSteps;
+  
+//   // Find the next incomplete step
+//   const nextIncompleteStep = currentSteps.find(step => !step.completed);
+//   if (!nextIncompleteStep) {
+//     return 'All steps completed';
+//   }
+  
+//   // Calculate remaining time from current step onwards
+//   const nextStepNumber = nextIncompleteStep.stepNumber;
+//   const remainingSteps = recipeSteps.filter(step => step.number >= nextStepNumber);
+//   const totalRemainingMinutes = remainingSteps.reduce((total, step) => total + (step.duration || 0), 0);
+  
+//   if (totalRemainingMinutes === 0) {
+//     return 'Unable to calculate';
+//   }
+  
+//   // Format time remaining
+//   if (totalRemainingMinutes < 60) {
+//     return `${totalRemainingMinutes} minutes remaining`;
+//   } else if (totalRemainingMinutes < 1440) {
+//     const hours = Math.floor(totalRemainingMinutes / 60);
+//     const minutes = totalRemainingMinutes % 60;
+//     return `${hours}h ${minutes}m remaining`;
+//   } else {
+//     const days = Math.floor(totalRemainingMinutes / 1440);
+//     const hours = Math.floor((totalRemainingMinutes % 1440) / 60);
+//     return `${days}d ${hours}h remaining`;
+//   }
+// };
 
 // function BatchRowSkeleton() {
 //   return (
@@ -140,21 +195,42 @@
 //     }
 //   };
 
-//   // Status color mapping
+//   // // Status color mapping
+//   // const getStatusColor = (stage) => {
+//   //   switch (stage?.toLowerCase()) {
+//   //     case 'done':
+//   //       return 'success';
+//   //     case 'packaging':
+//   //       return 'warning';
+//   //     case 'processing':
+//   //     case 'start-processing':
+//   //     case 'end-processing':
+//   //       return 'error';
+//   //     case 'due':
+//   //       return 'default';
+//   //     default:
+//   //       return 'default';
+//   //   }
+//   // };
+
 //   const getStatusColor = (stage) => {
-//     switch (stage?.toLowerCase()) {
-//       case 'done':
-//         return 'success';
-//       case 'packaging':
-//         return 'warning';
-//       case 'processing':
-//         return 'error';
-//       case 'due':
-//         return 'default';
-//       default:
-//         return 'default';
-//     }
-//   };
+//   switch (stage?.toLowerCase()) {
+//     case 'done':
+//       return 'success';      // Green - completed
+//     case 'packaging':
+//       return 'warning';      // Orange - ready for packaging
+//     case 'start-processing':
+//       return 'primary';      // Blue - production started
+//     case 'processing':
+//       return 'info';         // Light blue - actively processing
+//     case 'end-processing':
+//       return 'secondary';    // Purple - processing finished
+//     case 'due':
+//       return 'error';        // Red - paused/stopped
+//     default:
+//       return 'default';
+//   }
+// };
 
 //   // Get product name by ID
 //   const getProductName = (productId) => {
@@ -314,13 +390,33 @@
 //   // Format batch details for display
 //   const formatBatchDetails = (batch) => {
 //     const details = [
-//       { label: 'Batch ID', value: `#${batch.id}` },
-//       { label: 'Product ID', value: batch.productId },
-//       { label: 'Product Name', value: getProductName(batch.productId) },
-//       { label: 'Stage', value: batch.stage },
-//       { label: 'Assigned Worker ID', value: batch.assignedWorkerId || 'Unassigned' },
-//       { label: 'Created At', value: batch.createdAt ? new Date(batch.createdAt).toLocaleString() : 'N/A' },
-//       { label: 'Updated At', value: batch.updatedAt ? new Date(batch.updatedAt).toLocaleString() : 'N/A' }
+//       { 
+//         label: 'Product/Batch Name', 
+//         value: `${getProductName(batch.productId)} (Batch #${batch.id})`,
+//         icon: <LocalDining />
+//       },
+//       { 
+//         label: 'Current Stage', 
+//         value: batch.stage?.charAt(0).toUpperCase() + batch.stage?.slice(1) || 'Unknown',
+//         icon: <Assignment />,
+//         chip: true,
+//         chipColor: getStatusColor(batch.stage)
+//       },
+//       { 
+//         label: 'Last Completed Step', 
+//         value: getLastCompletedStep(batch),
+//         icon: <CheckCircle />
+//       },
+//       { 
+//         label: 'Time Until Completion', 
+//         value: getEstimatedCompletion(batch),
+//         icon: <Timer />
+//       },
+//       { 
+//         label: 'Created Date', 
+//         value: batch.createdAt ? new Date(batch.createdAt).toLocaleString() : 'N/A',
+//         icon: <Add />
+//       }
 //     ];
 
 //     return details;
@@ -572,55 +668,171 @@
 //       <Dialog 
 //         open={detailsDialogOpen} 
 //         onClose={() => setDetailsDialogOpen(false)} 
-//         maxWidth="sm" 
+//         maxWidth="md" 
 //         fullWidth
 //       >
 //         <DialogTitle>
-//           Batch Details
+//           <Box display="flex" alignItems="center" gap={2}>
+//             <Visibility color="primary" />
+//             <Typography variant="h6" fontWeight="bold">
+//               Batch Details - #{selectedBatch?.id}
+//             </Typography>
+//           </Box>
 //         </DialogTitle>
 //         <DialogContent>
 //           {selectedBatch && (
-//             <Card elevation={0} sx={{ border: 1, borderColor: 'divider' }}>
-//               <CardContent>
-//                 {formatBatchDetails(selectedBatch).map((detail, index) => (
-//                   <Box key={index} sx={{ mb: 2 }}>
-//                     <Box display="flex" justifyContent="space-between" alignItems="center">
-//                       <Typography variant="body2" color="textSecondary" fontWeight="medium">
-//                         {detail.label}:
-//                       </Typography>
-//                       <Typography variant="body2" fontWeight="medium">
-//                         {detail.value}
-//                       </Typography>
-//                     </Box>
-//                     {index < formatBatchDetails(selectedBatch).length - 1 && (
-//                       <Divider sx={{ mt: 1 }} />
-//                     )}
-//                   </Box>
-//                 ))}
-                
-//                 {/* Raw JSON for debugging */}
-//                 <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-//                   <Typography variant="caption" color="textSecondary" fontWeight="bold">
-//                     Raw Data:
+//             <Box sx={{ mt: 2 }}>
+//               {/* Main Details Card */}
+//               <Card elevation={2} sx={{ mb: 3 }}>
+//                 <CardContent>
+//                   <Typography variant="h6" gutterBottom sx={{ mb: 3, color: 'primary.main' }}>
+//                     Batch Information
 //                   </Typography>
-//                   <Box component="pre" sx={{ 
-//                     fontSize: '0.75rem', 
-//                     fontFamily: 'monospace',
-//                     whiteSpace: 'pre-wrap',
-//                     wordBreak: 'break-word',
-//                     mt: 1
-//                   }}>
-//                     {JSON.stringify(selectedBatch, null, 2)}
+                  
+//                   <Grid container spacing={3}>
+//                     {formatBatchDetails(selectedBatch).map((detail, index) => (
+//                       <Grid item xs={12} key={index}>
+//                         <Box display="flex" alignItems="center" gap={2} sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+//                           <Box sx={{ color: 'primary.main' }}>
+//                             {detail.icon}
+//                           </Box>
+//                           <Box flexGrow={1}>
+//                             <Typography variant="body2" color="textSecondary" fontWeight="medium">
+//                               {detail.label}
+//                             </Typography>
+//                             {detail.chip ? (
+//                               <Chip 
+//                                 label={detail.value} 
+//                                 color={detail.chipColor} 
+//                                 size="small" 
+//                                 sx={{ mt: 0.5 }}
+//                               />
+//                             ) : (
+//                               <Typography variant="body1" fontWeight="medium" sx={{ mt: 0.5 }}>
+//                                 {detail.value}
+//                               </Typography>
+//                             )}
+//                           </Box>
+//                         </Box>
+//                       </Grid>
+//                     ))}
+//                   </Grid>
+//                 </CardContent>
+//               </Card>
+
+//               {/* Production Progress Card */}
+//               {selectedBatch.currentSteps && Array.isArray(selectedBatch.currentSteps) && (
+//                 <Card elevation={2} sx={{ mb: 3 }}>
+//                   <CardContent>
+//                     <Typography variant="h6" gutterBottom sx={{ mb: 3, color: 'primary.main' }}>
+//                       Production Progress
+//                     </Typography>
+                    
+//                     <Box sx={{ mb: 2 }}>
+//                       <Typography variant="body2" color="textSecondary" gutterBottom>
+//                         Steps Completed: {selectedBatch.currentSteps.filter(s => s.completed).length} / {selectedBatch.currentSteps.length}
+//                       </Typography>
+//                       <Box sx={{ width: '100%', bgcolor: 'grey.200', borderRadius: 1, height: 8 }}>
+//                         <Box 
+//                           sx={{ 
+//                             width: `${(selectedBatch.currentSteps.filter(s => s.completed).length / selectedBatch.currentSteps.length) * 100}%`,
+//                             bgcolor: 'success.main',
+//                             height: '100%',
+//                             borderRadius: 1,
+//                             transition: 'width 0.3s ease'
+//                           }}
+//                         />
+//                       </Box>
+//                     </Box>
+
+//                     <List dense>
+//                       {selectedBatch.currentSteps.map((step, index) => (
+//                         <ListItem key={index} sx={{ px: 0 }}>
+//                           <Box display="flex" alignItems="center" gap={2} width="100%">
+//                             {step.completed ? (
+//                               <CheckCircle color="success" />
+//                             ) : (
+//                               <Box 
+//                                 sx={{ 
+//                                   width: 24, 
+//                                   height: 24, 
+//                                   borderRadius: '50%', 
+//                                   border: 2, 
+//                                   borderColor: 'grey.300',
+//                                   display: 'flex',
+//                                   alignItems: 'center',
+//                                   justifyContent: 'center'
+//                                 }}
+//                               >
+//                                 <Typography variant="caption" color="textSecondary">
+//                                   {step.stepNumber}
+//                                 </Typography>
+//                               </Box>
+//                             )}
+//                             <Box flexGrow={1}>
+//                               <Typography 
+//                                 variant="body2" 
+//                                 fontWeight={step.completed ? 'normal' : 'medium'}
+//                                 color={step.completed ? 'textSecondary' : 'textPrimary'}
+//                                 sx={{ textDecoration: step.completed ? 'line-through' : 'none' }}
+//                               >
+//                                 Step {step.stepNumber}: {step.name}
+//                               </Typography>
+//                             </Box>
+//                             {step.completed && (
+//                               <Chip label="Complete" color="success" size="small" />
+//                             )}
+//                           </Box>
+//                         </ListItem>
+//                       ))}
+//                     </List>
+//                   </CardContent>
+//                 </Card>
+//               )}
+
+//               {/* Technical Details Card (Collapsible) */}
+//               <Card elevation={1}>
+//                 <CardContent>
+//                   <Typography variant="h6" gutterBottom sx={{ mb: 2, color: 'text.secondary' }}>
+//                     Technical Details
+//                   </Typography>
+//                   <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+//                     <Typography variant="caption" color="textSecondary" fontWeight="bold" gutterBottom>
+//                       Raw Batch Data:
+//                     </Typography>
+//                     <Box component="pre" sx={{ 
+//                       fontSize: '0.75rem', 
+//                       fontFamily: 'monospace',
+//                       whiteSpace: 'pre-wrap',
+//                       wordBreak: 'break-word',
+//                       mt: 1,
+//                       maxHeight: 200,
+//                       overflow: 'auto'
+//                     }}>
+//                       {JSON.stringify(selectedBatch, null, 2)}
+//                     </Box>
 //                   </Box>
-//                 </Box>
-//               </CardContent>
-//             </Card>
+//                 </CardContent>
+//               </Card>
+//             </Box>
 //           )}
 //         </DialogContent>
 //         <DialogActions>
-//           <Button onClick={() => setDetailsDialogOpen(false)}>
+//           <Button onClick={() => setDetailsDialogOpen(false)} variant="outlined">
 //             Close
 //           </Button>
+//           {selectedBatch?.stage === 'due' && (
+//             <Button 
+//               variant="contained" 
+//               startIcon={<PlayArrow />}
+//               onClick={() => {
+//                 setDetailsDialogOpen(false);
+//                 handleBatchAction('start');
+//               }}
+//             >
+//               Start Production
+//             </Button>
+//           )}
 //         </DialogActions>
 //       </Dialog>
 //     </Paper>
@@ -628,7 +840,6 @@
 // }
 
 // export default BatchTable;
-
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -826,19 +1037,23 @@ function BatchTable({
     }
   };
 
-  // Status color mapping
+  // Status color mapping with distinct colors for each stage
   const getStatusColor = (stage) => {
     switch (stage?.toLowerCase()) {
       case 'done':
-        return 'success';
+        return 'success';      // Green - completed
       case 'packaging':
-        return 'warning';
-      case 'processing':
+        return 'warning';      // Orange - ready for packaging
       case 'start-processing':
+        return 'primary';      // Blue - production started
+      case 'processing':
+        return 'info';         // Light blue - actively processing
       case 'end-processing':
-        return 'error';
+        return 'secondary';    // Purple - processing finished
       case 'due':
-        return 'default';
+        return 'error';        // Red - waiting to start
+      case 'paused':
+        return 'default';      // Gray - paused/stopped
       default:
         return 'default';
     }
@@ -1035,7 +1250,7 @@ function BatchTable({
   };
 
   return (
-    <Paper elevation={2} sx={{ height: 'fit-content' }}>
+    <Paper elevation={2} sx={{ height: 'fit-content'}}>
       {/* Error Alert */}
       {error && (
         <Alert severity="error" sx={{ m: 2 }} onClose={() => setError(null)}>
@@ -1084,7 +1299,7 @@ function BatchTable({
       </Box>
 
       {/* Batches table */}
-      <TableContainer>
+      <TableContainer >
         <Table size={dense ? "small" : "medium"}>
           <TableHead>
             <TableRow>
@@ -1129,14 +1344,15 @@ function BatchTable({
                   </TableCell>
                   
                   <TableCell>
-                    <Badge
+                    <Chip
+                      label={batch.stage}
                       color={getStatusColor(batch.stage)}
-                      variant="dot"
-                      sx={{ mr: 1 }}
+                      size="small"
+                      sx={{ 
+                        fontWeight: 'medium',
+                        textTransform: 'capitalize'
+                      }}
                     />
-                    <Typography variant="body2">
-                      {batch.stage}
-                    </Typography>
                   </TableCell>
                   
                   <TableCell>

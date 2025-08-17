@@ -127,49 +127,6 @@ function Header({ title, currentPage, drawerWidth, onDrawerToggle, userRole = 'a
             {userRole}
           </Typography>
         </Box>
-
-
-        {/* User profile icon with dropdown
-        <IconButton color="inherit" sx={{ ml: 1 }} onClick={handleProfileClick}>
-          <Avatar sx={{ width: 32, height: 32, bgcolor: 'rgba(255,255,255,0.2)' }}>
-            <Person />
-          </Avatar>
-        </IconButton>
-
-        {/* Profile dropdown menu */}
-        {/* <Menu
-          anchorEl={profileAnchor}
-          open={Boolean(profileAnchor)}
-          onClose={handleProfileClose}
-          anchorOrigin={{
-            vertical: 'bottom',
-            horizontal: 'right',
-          }}
-          transformOrigin={{
-            vertical: 'top',
-            horizontal: 'right',
-          }}
-        >
-          <MenuItem onClick={handleProfileClose}>
-            <ListItemIcon>
-              <Person />
-            </ListItemIcon>
-            <ListItemText primary="Profile" />
-          </MenuItem>
-          <MenuItem onClick={handleProfileClose}>
-            <ListItemIcon>
-              <Settings />
-            </ListItemIcon>
-            <ListItemText primary="Settings" />
-          </MenuItem>
-          <Divider />
-          <MenuItem onClick={handleProfileClose}>
-            <ListItemIcon>
-              <Logout />
-            </ListItemIcon>
-            <ListItemText primary="Logout" />
-          </MenuItem>
-        </Menu> */} 
       </Toolbar>
     </AppBar>
   );

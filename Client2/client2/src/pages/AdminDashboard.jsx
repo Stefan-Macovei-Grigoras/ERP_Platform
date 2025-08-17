@@ -135,6 +135,7 @@ function AdminDashboard() {
             {/* Stats Cards Row */}
             <Box display="flex" gap={3} mb={4} sx={{ 
               flexWrap: { xs: 'wrap', sm: 'nowrap' },
+              height: '120px',
               '& > *': { minWidth: { xs: '100%', sm: '200px' } }
             }}>
               {statsData.loading ? (
@@ -172,31 +173,27 @@ function AdminDashboard() {
                     title="Total Users" 
                     value={statsData.totalUsers.toString()} 
                     color="#1976d2"
-                    change={`${statsData.totalUsers > 0 ? 'Active' : 'No'} users`}
                   />
                   <StatsCard 
                     title="Active Batches" 
                     value={statsData.activeBatches.toString()} 
                     color="#2e7d32"
-                    change={`${statsData.inProgressBatches} in progress`}
                   />
                   <StatsCard 
                     title="Products" 
                     value={statsData.totalProducts.toString()} 
                     color="#9c27b0"
-                    change={`${statsData.totalProducts > 0 ? 'Available' : 'None'} in catalog`}
+                  />
+                  <StatsCard
+                      title="Ready for Packaging"
+                      value={statsData.readyForPackaging.toString()}
+                      color="#ff9800"
+                      
                   />
                   <StatsCard 
                     title="Low Stock Items" 
                     value={statsData.lowStockItems.toString()} 
                     color={statsData.lowStockItems > 0 ? "#ed6c02" : "#4caf50"}
-                    change={statsData.lowStockItems > 0 ? "Requires attention" : "Stock levels OK"}
-                  />
-                  <StatsCard 
-                    title="Ready for Packaging" 
-                    value={statsData.readyForPackaging.toString()} 
-                    color="#ff9800"
-                    change={`${statsData.readyForPackaging > 0 ? 'Processing complete' : 'None ready'}`}
                   />
                 </>
               )}
@@ -204,14 +201,14 @@ function AdminDashboard() {
 
             {/* Main Dashboard Content */}
             <Box display="flex" gap={3} sx={{ 
-              flexDirection: { xs: 'column', lg: 'row' }
+              flexDirection: { xs: 'column', lg: 'row' }, overflow: 'visible'
             }}>
               {/* Recent Batches - Takes more space */}
               <Box sx={{ flex: { lg: 2 } }}>
                 <BatchTable 
                   showAll={true} 
                   allowManagement={true}
-                  maxRows={8}
+                  maxRows={5} 
                   title="Recent Batches"
                 />
               </Box>
@@ -222,7 +219,14 @@ function AdminDashboard() {
   };
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ 
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100vw',
+      height: '100vh',
+      overflow: 'hidden'
+    }}>
       {/* Header Component */}
       <Header 
         title="Admin Dashboard"
@@ -247,12 +251,14 @@ function AdminDashboard() {
       <Box
         component="main"
         sx={{
-          flexGrow: 1,
+          position: 'fixed',
+          top: 64, // Header height (usually 64px for MUI AppBar)
+          left: drawerWidth, // Start after sidebar width
+          right: 0, // Stretch to right edge
+          bottom: 0, // Stretch to bottom
           p: 3,
-          width: { md: `calc(100% - ${drawerWidth}px)` },
-          mt: 8, // Account for header height
-          minHeight: '100vh',
-          backgroundColor: '#f5f5f5'
+          backgroundColor: '#f5f5f5',
+          overflow: 'auto' // Allow scrolling within content area only
         }}
       >
         {renderContent()}

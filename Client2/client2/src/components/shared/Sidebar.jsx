@@ -38,22 +38,6 @@ const menuItemsByRole = {
     { text: 'Products', icon: <LocalDining />, path: 'products' },
     { text: 'Inventory', icon: <Inventory />, path: 'inventory' },
     { text: 'All Batches', icon: <Schedule />, path: 'batches' },
-  ],
-  factory: [
-    { text: 'My Dashboard', icon: <Dashboard />, path: 'overview' },
-    { text: 'My Batches', icon: <Schedule />, path: 'my-batches' },
-    { text: 'Start Production', icon: <PlayArrow />, path: 'start-production' },
-    { text: 'Quality Control', icon: <VerifiedUser />, path: 'quality' },
-    { text: 'Equipment Status', icon: <Build />, path: 'equipment' },
-    { text: 'My Performance', icon: <TrendingUp />, path: 'metrics' }
-  ],
-  packaging: [
-    { text: 'My Dashboard', icon: <Dashboard />, path: 'overview' },
-    { text: 'Packaging Queue', icon: <Inventory />, path: 'queue' },
-    { text: 'Active Jobs', icon: <Work />, path: 'active' },
-    { text: 'Print Labels', icon: <Print />, path: 'labels' },
-    { text: 'Shipping Prep', icon: <LocalShipping />, path: 'shipping' },
-    { text: 'My Stats', icon: <TrendingUp />, path: 'stats' }
   ]
 };
 
@@ -64,18 +48,6 @@ const brandingByRole = {
     subtitle: 'Admin Portal',
     color: '#1976d2',
     bgColor: '#e3f2fd'
-  },
-  factory: {
-    title: 'Cheese ERP',
-    subtitle: 'Production',
-    color: '#2e7d32',
-    bgColor: '#e8f5e8'
-  },
-  packaging: {
-    title: 'Cheese ERP',
-    subtitle: 'Packaging',
-    color: '#9c27b0',
-    bgColor: '#f3e5f5'
   }
 };
 
@@ -172,6 +144,7 @@ function Sidebar({
   return (
     <Box
       component="nav"
+      position="static"
       sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
     >
       {/* Mobile drawer - temporary overlay */}
