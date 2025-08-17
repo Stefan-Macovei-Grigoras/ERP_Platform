@@ -139,7 +139,7 @@
 
 // services/factory/factoryApiService.js
 
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL ='http://localhost:5000';
 
 class FactoryApiService {
   constructor() {
@@ -221,13 +221,13 @@ class FactoryApiService {
         stepNumber: step.number,
         name: step.name,
         completed: false,
-        startedAt: null,
-        completedAt: null,
-        actualDuration: null,
-        notes: null,
-        expectedDuration: step.duration,
-        temperature: step.temperature,
-        instructions: step.instructions
+        // startedAt: null,
+        // completedAt: null,
+        // actualDuration: null,
+        // notes: null,
+        // expectedDuration: step.duration,
+        // temperature: step.temperature,
+        // instructions: step.instructions
       }));
       
       const updatedBatch = await this.makeRequest(`/batch/${batchId}`, {
@@ -258,13 +258,13 @@ class FactoryApiService {
       // Update the specific step in currentSteps array
       // Note: using 'number' field to match your database structure
       currentSteps = currentSteps.map(step => {
-        if (step.number === stepData.stepNumber) {
+        if (step.stepNumber === stepData.stepNumber) {
           return {
             ...step,
             completed: true,
-            completedAt: stepData.completedAt || new Date().toISOString(),
-            actualDuration: stepData.actualDuration,
-            notes: stepData.notes || ''
+            // completedAt: stepData.completedAt || new Date().toISOString(),
+            // actualDuration: stepData.actualDuration,
+            // notes: stepData.notes || ''
           };
         }
         return step;

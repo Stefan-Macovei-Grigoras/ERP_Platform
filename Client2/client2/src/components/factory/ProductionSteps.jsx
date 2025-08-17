@@ -1,536 +1,3 @@
-// // components/factory/ProductionSteps.jsx
-// import React, { useState, useEffect } from 'react';
-// import {
-//   Box,
-//   Paper,
-//   Typography,
-//   Button,
-//   Stepper,
-//   Step,
-//   StepLabel,
-//   StepContent,
-//   Card,
-//   CardContent,
-//   LinearProgress,
-//   Chip,
-//   Alert,
-//   Dialog,
-//   DialogTitle,
-//   DialogContent,
-//   DialogActions,
-//   TextField,
-//   Grid
-// } from '@mui/material';
-// import {
-//   CheckCircle,
-//   PlayArrow,
-//   Pause,
-//   Timer,
-//   Thermostat,
-//   ArrowBack,
-//   Done
-// } from '@mui/icons-material';
-
-// // Import the API service and sensor component
-// import factoryApiService from '../../services/factory/factoryApiService';
-// import SensorDataDisplay from '../shared/SensorDataDisplay';
-
-// function ProductionSteps({ selectedBatch, onBackToSelection, onProductionComplete }) {
-//   // Debug logging
-//   console.log('ProductionSteps received selectedBatch:', selectedBatch);
-  
-//   const [activeStep, setActiveStep] = useState(0);
-//   const [completedSteps, setCompletedSteps] = useState([]);
-//   const [currentStepStartTime, setCurrentStepStartTime] = useState(null);
-//   const [stepTimers, setStepTimers] = useState({});
-//   const [confirmDialog, setConfirmDialog] = useState(false);
-//   const [stepNotes, setStepNotes] = useState('');
-//   const [productionStarted, setProductionStarted] = useState(false);
-//   const [currentBatch, setCurrentBatch] = useState(selectedBatch);
-//   const [loading, setLoading] = useState(false);
-
-//   const recipe = selectedBatch?.Product?.Recipe;
-//   const steps = recipe?.steps?.steps || [];
-
-//   // Debug logging for recipe and steps
-//   console.log('Recipe:', recipe);
-//   console.log('Steps:', steps);
-
-//   // Early return if no valid batch
-//   if (!selectedBatch) {
-//     return (
-//       <Box p={3}>
-//         <Alert severity="error">
-//           <Typography>No batch selected. Please return to batch selection.</Typography>
-//           <Button onClick={onBackToSelection} sx={{ mt: 2 }}>
-//             Back to Selection
-//           </Button>
-//         </Alert>
-//       </Box>
-//     );
-//   }
-
-//   // Early return if no recipe or steps
-//   if (!recipe || !steps.length) {
-//     return (
-//       <Box p={3}>
-//         <Alert severity="warning">
-//           <Typography>This batch has no recipe or production steps defined.</Typography>
-//           <Typography variant="body2" sx={{ mt: 1 }}>
-//             Batch ID: {selectedBatch.id} | Product: {selectedBatch.Product?.name}
-//           </Typography>
-//           {recipe && (
-//             <Typography variant="body2" sx={{ mt: 1 }}>
-//               Recipe: {recipe.name} | Steps found: {steps.length}
-//             </Typography>
-//           )}
-//           <Button onClick={onBackToSelection} sx={{ mt: 2 }}>
-//             Back to Selection
-//           </Button>
-//         </Alert>
-//       </Box>
-//     );
-//   }
-
-//   // Calculate total progress
-//   const progress = steps.length > 0 ? (completedSteps.length / steps.length) * 100 : 0;
-
-//   // Start production - update batch stage to 'start-processing'
-//   const handleStartProduction = async () => {
-//     try {
-//       setLoading(true);
-      
-//       // Check if we have a valid batch
-//       if (!selectedBatch || !selectedBatch.id) {
-//         throw new Error('Invalid batch selected');
-//       }
-      
-//       // Update batch stage to 'start-processing'
-//       const updatedBatch = await factoryApiService.startProduction(selectedBatch.id);
-//       setCurrentBatch(updatedBatch);
-      
-//       setProductionStarted(true);
-//       setCurrentStepStartTime(new Date());
-      
-//       console.log(`[PRODUCTION START] Batch ${selectedBatch.id} stage updated to 'start-processing'`);
-//     } catch (error) {
-//       console.error('Failed to start production:', error);
-//       alert(`Failed to start production: ${error.message}`);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   // Complete current step
-//   const handleCompleteStep = () => {
-//     setConfirmDialog(true);
-//   };
-
-//   // Confirm step completion
-//   const handleConfirmStepCompletion = async () => {
-//     try {
-//       const stepEndTime = new Date();
-//       const stepDuration = currentStepStartTime 
-//         ? Math.round((stepEndTime - currentStepStartTime) / 60000) // minutes
-//         : steps[activeStep]?.duration || 0;
-
-//       const stepData = {
-//         stepNumber: activeStep + 1,
-//         stepId: steps[activeStep]?.number,
-//         stepName: steps[activeStep]?.name,
-//         completedAt: stepEndTime,
-//         actualDuration: stepDuration,
-//         expectedDuration: steps[activeStep]?.duration,
-//         temperature: steps[activeStep]?.temperature,
-//         notes: stepNotes
-//       };
-
-//       // Add to completed steps
-//       const newCompletedSteps = [...completedSteps, stepData];
-//       setCompletedSteps(newCompletedSteps);
-
-//       // Update timers
-//       setStepTimers(prev => ({
-//         ...prev,
-//         [activeStep]: stepDuration
-//       }));
-
-//       console.log(`[STEP COMPLETE] Step ${activeStep + 1}: ${steps[activeStep]?.name} completed in ${stepDuration} minutes`);
-
-//       // Move to next step or complete production
-//       if (activeStep < steps.length - 1) {
-//         setActiveStep(activeStep + 1);
-//         setCurrentStepStartTime(new Date());
-//       } else {
-//         // All steps complete - finish processing stage
-//         if (steps.length > 0) { // Only complete if we actually have steps
-//           await handleProcessingComplete(newCompletedSteps);
-//         }
-//       }
-
-//       // Reset dialog
-//       setConfirmDialog(false);
-//       setStepNotes('');
-      
-//     } catch (error) {
-//       console.error('Failed to complete step:', error);
-//       alert('Failed to complete step. Please try again.');
-//     }
-//   };
-
-//   // Complete processing stage - update batch to 'end-processing'
-//   const handleProcessingComplete = async (finalCompletedSteps) => {
-//     try {
-//       setLoading(true);
-      
-//       const totalDuration = Object.values(stepTimers).reduce((sum, time) => sum + time, 0);
-      
-//       const completionData = {
-//         yield: recipe?.yield || 0,
-//         totalDuration: totalDuration,
-//         completedSteps: finalCompletedSteps,
-//         notes: 'All production steps completed successfully'
-//       };
-
-//       // Update batch stage to 'end-processing'
-//       const updatedBatch = await factoryApiService.finishProcessing(
-//         currentBatch.id, 
-//         completionData
-//       );
-      
-//       setCurrentBatch(updatedBatch);
-      
-//       console.log(`[PROCESSING COMPLETE] Batch ${currentBatch.id} stage updated to 'end-processing'`);
-      
-//       // Call the parent completion handler
-//       onProductionComplete({
-//         ...completionData,
-//         batchId: currentBatch.id,
-//         productId: selectedBatch.productId,
-//         stage: 'end-processing'
-//       });
-      
-//     } catch (error) {
-//       console.error('Failed to complete processing:', error);
-//       alert('Failed to complete processing. Please try again.');
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   // Don't show completion state if there are no steps or we haven't started
-//   const shouldShowCompletion = steps.length > 0 && completedSteps.length === steps.length && productionStarted;
-
-//   // Format duration helper
-//   const formatDuration = (minutes) => {
-//     if (minutes < 60) return `${minutes}min`;
-//     if (minutes < 1440) { // Less than 24 hours
-//       const hours = Math.floor(minutes / 60);
-//       const remainingMinutes = minutes % 60;
-//       return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}min` : `${hours}h`;
-//     } else { // 24 hours or more
-//       const days = Math.floor(minutes / 1440);
-//       const remainingHours = Math.floor((minutes % 1440) / 60);
-//       const remainingMinutes = minutes % 60;
-      
-//       let result = `${days}d`;
-//       if (remainingHours > 0) result += ` ${remainingHours}h`;
-//       if (remainingMinutes > 0) result += ` ${remainingMinutes}min`;
-      
-//       return result;
-//     }
-//   };
-
-//   // Get step status
-//   const getStepStatus = (stepIndex) => {
-//     if (completedSteps.some(cs => cs.stepNumber === stepIndex + 1)) {
-//       return 'completed';
-//     }
-//     if (stepIndex === activeStep && productionStarted) {
-//       return 'active';
-//     }
-//     return 'pending';
-//   };
-
-//   return (
-//     <Box>
-//       {/* Header */}
-//       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-//         <Box>
-//           <Button 
-//             startIcon={<ArrowBack />}
-//             onClick={onBackToSelection}
-//             sx={{ mb: 1 }}
-//             disabled={loading}
-//           >
-//             Back to Selection
-//           </Button>
-//           <Typography variant="h5" fontWeight="bold">
-//             Production: {selectedBatch?.Product?.name}
-//           </Typography>
-//           <Typography variant="body2" color="textSecondary">
-//             Recipe: {recipe?.name} | Expected Yield: {recipe?.yield}kg | Batch ID: {selectedBatch?.id}
-//           </Typography>
-//           <Box display="flex" gap={1} mt={1}>
-//             <Chip 
-//               label={`Stage: ${currentBatch?.stage || selectedBatch?.stage}`} 
-//               color={currentBatch?.stage === 'start-processing' ? 'primary' : 'warning'} 
-//               size="small" 
-//             />
-//           </Box>
-//         </Box>
-//         <Box textAlign="right">
-//           <Typography variant="h6" color="primary">
-//             {Math.round(progress)}% Complete
-//           </Typography>
-//           <LinearProgress 
-//             variant="determinate" 
-//             value={progress} 
-//             sx={{ width: 200, mt: 1 }}
-//           />
-//           <Typography variant="caption" color="textSecondary" display="block" mt={1}>
-//             {completedSteps.length} of {steps.length} steps done
-//           </Typography>
-//         </Box>
-//       </Box>
-
-//       {/* Production Info Alert */}
-//       <Alert severity="info" sx={{ mb: 3 }}>
-//         <Typography variant="body2">
-//           <strong>Recipe:</strong> {recipe?.name} | 
-//           <strong> Total Time:</strong> {formatDuration(recipe?.totalTime || 0)} | 
-//           <strong> Steps:</strong> {steps.length}
-//         </Typography>
-//       </Alert>
-
-//       {/* Main Content Grid */}
-//       <Grid container spacing={3}>
-//         {/* Left Column - Sensor Data */}
-//         <Grid item xs={12} lg={4}>
-//           <Box sx={{ position: 'sticky', top: 24 }}>
-//             <SensorDataDisplay />
-//           </Box>
-//         </Grid>
-
-//         {/* Right Column - Production Steps */}
-//         <Grid item xs={12} lg={8}>
-//           {/* Start Production Button */}
-//           {!productionStarted && (
-//             <Alert severity="warning" sx={{ mb: 3 }}>
-//               <Box display="flex" justifyContent="space-between" alignItems="center">
-//                 <Typography>Ready to start production? This will update the batch status to 'start-processing'.</Typography>
-//                 <Button 
-//                   variant="contained"
-//                   startIcon={<PlayArrow />}
-//                   onClick={handleStartProduction}
-//                   disabled={loading}
-//                   sx={{ ml: 2 }}
-//                 >
-//                   {loading ? 'Starting...' : 'Start Production'}
-//                 </Button>
-//               </Box>
-//             </Alert>
-//           )}
-
-//           {/* Production Steps */}
-//           <Paper elevation={2} sx={{ p: 3 }}>
-//             <Stepper activeStep={activeStep} orientation="vertical">
-//               {steps.map((step, index) => {
-//                 const status = getStepStatus(index);
-//                 const isCompleted = status === 'completed';
-//                 const isActive = status === 'active';
-
-//                 return (
-//                   <Step key={index} completed={isCompleted}>
-//                     <StepLabel
-//                       icon={isCompleted ? <CheckCircle color="success" /> : undefined}
-//                       sx={{
-//                         '& .MuiStepLabel-label': {
-//                           fontWeight: isActive ? 'bold' : 'normal',
-//                           color: isActive ? 'primary.main' : 'inherit'
-//                         }
-//                       }}
-//                     >
-//                       <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
-//                         <Typography variant="h6">
-//                           Step {step.number}: {step.name}
-//                         </Typography>
-//                         {isActive && (
-//                           <Chip 
-//                             label="In Progress" 
-//                             color="primary" 
-//                             size="small"
-//                             icon={<Timer />}
-//                           />
-//                         )}
-//                         {isCompleted && (
-//                           <Chip 
-//                             label="Completed" 
-//                             color="success" 
-//                             size="small"
-//                             icon={<Done />}
-//                           />
-//                         )}
-//                       </Box>
-//                     </StepLabel>
-
-//                     <StepContent>
-//                       <Card variant="outlined" sx={{ mt: 2, mb: 2 }}>
-//                         <CardContent>
-//                           {/* Step Instructions */}
-//                           <Typography variant="body1" mb={2} sx={{ fontStyle: 'italic' }}>
-//                             "{step.instructions}"
-//                           </Typography>
-
-//                           {/* Step Parameters */}
-//                           <Box display="flex" gap={2} mb={2} flexWrap="wrap">
-//                             <Chip 
-//                               label={`Expected: ${formatDuration(step.duration)}`}
-//                               icon={<Timer />}
-//                               size="small"
-//                               variant="outlined"
-//                             />
-//                             <Chip 
-//                               label={`Temperature: ${step.temperature}°C`}
-//                               icon={<Thermostat />}
-//                               size="small"
-//                               variant="outlined"
-//                               color="secondary"
-//                             />
-//                             {isActive && currentStepStartTime && (
-//                               <Chip 
-//                                 label={`Started: ${currentStepStartTime.toLocaleTimeString()}`}
-//                                 size="small"
-//                                 variant="outlined"
-//                                 color="info"
-//                               />
-//                             )}
-//                           </Box>
-
-//                           {/* Action Buttons */}
-//                           {isActive && productionStarted && (
-//                             <Box display="flex" gap={2} mt={2}>
-//                               <Button 
-//                                 variant="contained"
-//                                 onClick={handleCompleteStep}
-//                                 startIcon={<CheckCircle />}
-//                                 color="success"
-//                                 disabled={loading}
-//                               >
-//                                 Complete Step
-//                               </Button>
-//                               <Button 
-//                                 variant="outlined"
-//                                 startIcon={<Pause />}
-//                                 disabled={loading}
-//                               >
-//                                 Pause
-//                               </Button>
-//                             </Box>
-//                           )}
-
-//                           {/* Completed Step Info */}
-//                           {isCompleted && (
-//                             <Box mt={2} p={2} bgcolor="success.light" borderRadius={1}>
-//                               <Typography variant="body2" color="success.dark">
-//                                 ✓ Completed at {completedSteps.find(cs => cs.stepNumber === index + 1)?.completedAt?.toLocaleTimeString()}
-//                               </Typography>
-//                               {stepTimers[index] && (
-//                                 <Typography variant="body2" color="success.dark">
-//                                   Actual duration: {formatDuration(stepTimers[index])} 
-//                                   {step.duration !== stepTimers[index] && (
-//                                     <span> (Expected: {formatDuration(step.duration)})</span>
-//                                   )}
-//                                 </Typography>
-//                               )}
-//                               {completedSteps.find(cs => cs.stepNumber === index + 1)?.notes && (
-//                                 <Typography variant="body2" color="success.dark" sx={{ mt: 1, fontStyle: 'italic' }}>
-//                                   Notes: {completedSteps.find(cs => cs.stepNumber === index + 1)?.notes}
-//                                 </Typography>
-//                               )}
-//                             </Box>
-//                           )}
-//                         </CardContent>
-//                       </Card>
-//                     </StepContent>
-//                   </Step>
-//                 );
-//               })}
-//             </Stepper>
-
-//             {/* Production Complete */}
-//             {shouldShowCompletion && (
-//               <Box mt={4} p={3} bgcolor="success.light" borderRadius={2} textAlign="center">
-//                 <CheckCircle sx={{ fontSize: 48, color: 'success.main', mb: 2 }} />
-//                 <Typography variant="h5" color="success.dark" fontWeight="bold" mb={1}>
-//                   Processing Complete!
-//                 </Typography>
-//                 <Typography variant="body1" color="success.dark" mb={2}>
-//                   All {steps.length} steps completed successfully. Batch #{currentBatch?.id} is ready for packaging.
-//                 </Typography>
-//                 <Typography variant="body2" color="success.dark" mb={2}>
-//                   Total Production Time: {formatDuration(Object.values(stepTimers).reduce((sum, time) => sum + time, 0))}
-//                 </Typography>
-//                 <Button 
-//                   variant="contained"
-//                   color="success"
-//                   size="large"
-//                   onClick={onBackToSelection}
-//                   disabled={loading}
-//                 >
-//                   Return to Batch Selection
-//                 </Button>
-//               </Box>
-//             )}
-//           </Paper>
-//         </Grid>
-//       </Grid>
-
-//       {/* Confirm Step Completion Dialog */}
-//       <Dialog open={confirmDialog} onClose={() => setConfirmDialog(false)} maxWidth="sm" fullWidth>
-//         <DialogTitle>
-//           Confirm Step Completion
-//         </DialogTitle>
-//         <DialogContent>
-//           <Typography variant="body1" mb={2}>
-//             Are you ready to mark this step as complete?
-//           </Typography>
-//           <Typography variant="h6" mb={2} color="primary">
-//             Step {steps[activeStep]?.number}: {steps[activeStep]?.name}
-//           </Typography>
-//           <Typography variant="body2" mb={2} color="textSecondary">
-//             Expected duration: {formatDuration(steps[activeStep]?.duration)} | Temperature: {steps[activeStep]?.temperature}°C
-//           </Typography>
-//           <TextField
-//             label="Notes (optional)"
-//             multiline
-//             rows={3}
-//             fullWidth
-//             value={stepNotes}
-//             onChange={(e) => setStepNotes(e.target.value)}
-//             placeholder="Add any observations, deviations, or notes about this step..."
-//           />
-//         </DialogContent>
-//         <DialogActions>
-//           <Button onClick={() => setConfirmDialog(false)} disabled={loading}>
-//             Cancel
-//           </Button>
-//           <Button 
-//             onClick={handleConfirmStepCompletion}
-//             variant="contained"
-//             color="success"
-//             disabled={loading}
-//           >
-//             {loading ? 'Updating...' : 'Complete Step'}
-//           </Button>
-//         </DialogActions>
-//       </Dialog>
-//     </Box>
-//   );
-// }
-
-// export default ProductionSteps;
-
 // components/factory/ProductionSteps.jsx
 import React, { useState, useEffect } from 'react';
 import {
@@ -564,10 +31,14 @@ import {
   Done
 } from '@mui/icons-material';
 
+// Import the API service and sensor component
 import factoryApiService from '../../services/factory/factoryApiService';
 import SensorDataDisplay from '../shared/SensorDataDisplay';
 
-function ProductionSteps({ selectedBatch, onBackToSelection, onProductionComplete, resumeMode }) {
+function ProductionSteps({ selectedBatch, onBackToSelection, onProductionComplete }) {
+  // Debug logging
+  //console.log('ProductionSteps received selectedBatch:', selectedBatch);
+  
   const [activeStep, setActiveStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState([]);
   const [currentStepStartTime, setCurrentStepStartTime] = useState(null);
@@ -580,9 +51,6 @@ function ProductionSteps({ selectedBatch, onBackToSelection, onProductionComplet
 
   const recipe = selectedBatch?.Product?.Recipe;
   const steps = recipe?.steps?.steps || [];
-
-  console.log('ProductionSteps - selectedBatch:', selectedBatch);
-  console.log('ProductionSteps - resumeMode:', resumeMode);
 
   // Initialize state based on batch data when component mounts
   useEffect(() => {
@@ -626,7 +94,7 @@ function ProductionSteps({ selectedBatch, onBackToSelection, onProductionComplet
     }
   }, [selectedBatch]);
 
-  // Early return validations
+  // Early return if no valid batch
   if (!selectedBatch) {
     return (
       <Box p={3}>
@@ -640,6 +108,7 @@ function ProductionSteps({ selectedBatch, onBackToSelection, onProductionComplet
     );
   }
 
+  // Early return if no recipe or steps
   if (!recipe || !steps.length) {
     return (
       <Box p={3}>
@@ -648,6 +117,11 @@ function ProductionSteps({ selectedBatch, onBackToSelection, onProductionComplet
           <Typography variant="body2" sx={{ mt: 1 }}>
             Batch ID: {selectedBatch.id} | Product: {selectedBatch.Product?.name}
           </Typography>
+          {recipe && (
+            <Typography variant="body2" sx={{ mt: 1 }}>
+              Recipe: {recipe.name} | Steps found: {steps.length}
+            </Typography>
+          )}
           <Button onClick={onBackToSelection} sx={{ mt: 2 }}>
             Back to Selection
           </Button>
@@ -659,23 +133,24 @@ function ProductionSteps({ selectedBatch, onBackToSelection, onProductionComplet
   // Calculate total progress
   const progress = steps.length > 0 ? (completedSteps.length / steps.length) * 100 : 0;
 
-  // Start production for new batches
+  // Start production - update batch stage to 'start-processing'
   const handleStartProduction = async () => {
     try {
       setLoading(true);
       
+      // Check if we have a valid batch
       if (!selectedBatch || !selectedBatch.id) {
         throw new Error('Invalid batch selected');
       }
       
-      // Use API service to start production and initialize steps in DB
+      // Update batch stage to 'start-processing'
       const updatedBatch = await factoryApiService.startProduction(selectedBatch.id);
       setCurrentBatch(updatedBatch);
       
       setProductionStarted(true);
       setCurrentStepStartTime(new Date());
       
-      console.log(`Production started for batch ${selectedBatch.id}`);
+      //console.log(`[PRODUCTION START] Batch ${selectedBatch.id} stage updated to 'start-processing'`);
     } catch (error) {
       console.error('Failed to start production:', error);
       alert(`Failed to start production: ${error.message}`);
@@ -684,72 +159,126 @@ function ProductionSteps({ selectedBatch, onBackToSelection, onProductionComplet
     }
   };
 
-  // Complete current step and persist to database
+  // Complete current step
   const handleCompleteStep = () => {
     setConfirmDialog(true);
   };
 
   // Confirm step completion and save to database
+  // const handleConfirmStepCompletion = async () => {
+  //   try {
+  //     setLoading(true);
+      
+  //     const stepEndTime = new Date();
+  //     const stepDuration = currentStepStartTime 
+  //       ? Math.round((stepEndTime - currentStepStartTime) / 60000) // minutes
+  //       : steps[activeStep]?.duration || 0;
+
+  //     const stepData = {
+  //       stepNumber: activeStep + 1,
+  //       stepName: steps[activeStep]?.name,
+  //       completedAt: stepEndTime,
+  //       actualDuration: stepDuration,
+  //       expectedDuration: steps[activeStep]?.duration,
+  //       temperature: steps[activeStep]?.temperature,
+  //       notes: stepNotes
+  //     };
+
+  //     // Save step completion to database using the API service
+  //     const updatedBatch = await factoryApiService.completeStep(currentBatch.id, stepData);
+  //     setCurrentBatch(updatedBatch);
+
+  //     // Update local state from the updated batch data
+  //     if (updatedBatch.currentSteps) {
+  //       const progress = factoryApiService.getBatchProgress(updatedBatch);
+  //       setCompletedSteps(progress.completedSteps);
+  //     }
+
+  //     // Update timers
+  //     setStepTimers(prev => ({
+  //       ...prev,
+  //       [activeStep]: stepDuration
+  //     }));
+
+  //     console.log(`Step ${activeStep + 1} completed and saved to database`);
+
+  //     // Move to next step or complete production
+  //     if (activeStep < steps.length - 1) {
+  //       setActiveStep(activeStep + 1);
+  //       setCurrentStepStartTime(new Date());
+  //     } else {
+  //       // All steps complete - finish processing stage
+  //       const finalCompletedSteps = updatedBatch.currentSteps?.filter(step => step.completed) || [];
+  //       await handleProcessingComplete(finalCompletedSteps);
+  //     }
+
+  //     // Reset dialog
+  //     setConfirmDialog(false);
+  //     setStepNotes('');
+      
+  //   } catch (error) {
+  //     console.error('Failed to complete step:', error);
+  //     alert('Failed to complete step. Please try again.');
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   const handleConfirmStepCompletion = async () => {
-    try {
-      setLoading(true);
-      
-      const stepEndTime = new Date();
-      const stepDuration = currentStepStartTime 
-        ? Math.round((stepEndTime - currentStepStartTime) / 60000) // minutes
-        : steps[activeStep]?.duration || 0;
+  try {
+    setLoading(true);
+    
+    const stepEndTime = new Date();
+    const stepDuration = currentStepStartTime 
+      ? Math.round((stepEndTime - currentStepStartTime) / 60000) // minutes
+      : steps[activeStep]?.duration || 0;
 
-      const stepData = {
-        stepNumber: activeStep + 1,
-        stepName: steps[activeStep]?.name,
-        completedAt: stepEndTime,
-        actualDuration: stepDuration,
-        expectedDuration: steps[activeStep]?.duration,
-        temperature: steps[activeStep]?.temperature,
-        notes: stepNotes
-      };
+    const stepData = {
+      stepNumber: activeStep + 1,
+      stepName: steps[activeStep]?.name,
+      completedAt: stepEndTime,
+      actualDuration: stepDuration,
+      expectedDuration: steps[activeStep]?.duration,
+      temperature: steps[activeStep]?.temperature,
+      notes: stepNotes
+    };
 
-      // Save step completion to database using simple PATCH
-      const updatedBatch = await factoryApiService.completeStep(currentBatch.id, stepData);
-      setCurrentBatch(updatedBatch);
+    // Save step completion to database using the API service
+    const updatedBatch = await factoryApiService.completeStep(currentBatch.id, stepData);
+    setCurrentBatch(updatedBatch);
 
-      // Update local state from the updated batch data
-      if (updatedBatch.currentSteps) {
-        const progress = factoryApiService.getBatchProgress(updatedBatch);
-        setCompletedSteps(progress.completedSteps);
-      }
+    // Immediately update local state - don't wait for batch progress calculation
+    const newCompletedSteps = [...completedSteps, stepData];
+    setCompletedSteps(newCompletedSteps);
 
-      // Update timers
-      setStepTimers(prev => ({
-        ...prev,
-        [activeStep]: stepDuration
-      }));
+    // Update timers
+    setStepTimers(prev => ({
+      ...prev,
+      [activeStep]: stepDuration
+    }));
 
-      console.log(`Step ${activeStep + 1} completed and saved to database`);
+    console.log(`Step ${activeStep + 1} completed and saved to database`);
 
-      // Move to next step or complete production
-      if (activeStep < steps.length - 1) {
-        setActiveStep(activeStep + 1);
-        setCurrentStepStartTime(new Date());
-      } else {
-        // All steps complete - finish processing stage
-        const finalCompletedSteps = updatedBatch.currentSteps?.filter(step => step.completed) || [];
-        await handleProcessingComplete(finalCompletedSteps);
-      }
-
-      // Reset dialog
-      setConfirmDialog(false);
-      setStepNotes('');
-      
-    } catch (error) {
-      console.error('Failed to complete step:', error);
-      alert('Failed to complete step. Please try again.');
-    } finally {
-      setLoading(false);
+    // Move to next step or complete production
+    if (activeStep < steps.length - 1) {
+      setActiveStep(activeStep + 1);
+      setCurrentStepStartTime(new Date());
+    } else {
+      // All steps complete - finish processing stage
+      await handleProcessingComplete(newCompletedSteps);
     }
-  };
 
-  // Complete processing stage when all steps are done
+    // Reset dialog
+    setConfirmDialog(false);
+    setStepNotes('');
+    
+  } catch (error) {
+    console.error('Failed to complete step:', error);
+    alert('Failed to complete step. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
+  // Complete processing stage - update batch to 'end-processing'
   const handleProcessingComplete = async (finalCompletedSteps) => {
     try {
       setLoading(true);
@@ -771,7 +300,7 @@ function ProductionSteps({ selectedBatch, onBackToSelection, onProductionComplet
       
       setCurrentBatch(updatedBatch);
       
-      console.log(`Processing completed for batch ${currentBatch.id}`);
+      console.log(`[PROCESSING COMPLETE] Batch ${currentBatch.id} stage updated to 'end-processing'`);
       
       // Call the parent completion handler
       onProductionComplete({
@@ -789,14 +318,17 @@ function ProductionSteps({ selectedBatch, onBackToSelection, onProductionComplet
     }
   };
 
+  // Don't show completion state if there are no steps or we haven't started
+  const shouldShowCompletion = steps.length > 0 && completedSteps.length === steps.length && productionStarted;
+
   // Format duration helper
   const formatDuration = (minutes) => {
     if (minutes < 60) return `${minutes}min`;
-    if (minutes < 1440) {
+    if (minutes < 1440) { // Less than 24 hours
       const hours = Math.floor(minutes / 60);
       const remainingMinutes = minutes % 60;
       return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}min` : `${hours}h`;
-    } else {
+    } else { // 24 hours or more
       const days = Math.floor(minutes / 1440);
       const remainingHours = Math.floor((minutes % 1440) / 60);
       const remainingMinutes = minutes % 60;
@@ -816,7 +348,7 @@ function ProductionSteps({ selectedBatch, onBackToSelection, onProductionComplet
     
     // Check if this step is completed in the database currentSteps
     const isCompletedDB = selectedBatch.currentSteps?.some(
-      step => step.number === stepIndex + 1 && step.completed
+      step => step.stepNumber === stepIndex + 1 && step.completed
     );
     
     if (isCompletedLocal || isCompletedDB) {
@@ -827,8 +359,6 @@ function ProductionSteps({ selectedBatch, onBackToSelection, onProductionComplet
     }
     return 'pending';
   };
-
-  const shouldShowCompletion = steps.length > 0 && completedSteps.length === steps.length && productionStarted;
 
   return (
     <Box>
@@ -855,13 +385,6 @@ function ProductionSteps({ selectedBatch, onBackToSelection, onProductionComplet
               color={currentBatch?.stage === 'start-processing' ? 'primary' : 'warning'} 
               size="small" 
             />
-            {resumeMode && (
-              <Chip 
-                label="Resumed" 
-                color="info" 
-                size="small" 
-              />
-            )}
           </Box>
         </Box>
         <Box textAlign="right">
@@ -885,11 +408,6 @@ function ProductionSteps({ selectedBatch, onBackToSelection, onProductionComplet
           <strong>Recipe:</strong> {recipe?.name} | 
           <strong> Total Time:</strong> {formatDuration(recipe?.totalTime || 0)} | 
           <strong> Steps:</strong> {steps.length}
-          {resumeMode && (
-            <span>
-              <strong> | Status:</strong> Resuming from step {activeStep + 1}
-            </span>
-          )}
         </Typography>
       </Alert>
 
@@ -904,11 +422,11 @@ function ProductionSteps({ selectedBatch, onBackToSelection, onProductionComplet
 
         {/* Right Column - Production Steps */}
         <Grid item xs={12} lg={8}>
-          {/* Start Production Button - only for new batches */}
-          {!productionStarted && !resumeMode && (
+          {/* Start Production Button */}
+          {!productionStarted && (
             <Alert severity="warning" sx={{ mb: 3 }}>
               <Box display="flex" justifyContent="space-between" alignItems="center">
-                <Typography>Ready to start production? This will update the batch status and initialize step tracking.</Typography>
+                <Typography>Ready to start production? This will update the batch status to 'start-processing'.</Typography>
                 <Button 
                   variant="contained"
                   startIcon={<PlayArrow />}
@@ -919,15 +437,6 @@ function ProductionSteps({ selectedBatch, onBackToSelection, onProductionComplet
                   {loading ? 'Starting...' : 'Start Production'}
                 </Button>
               </Box>
-            </Alert>
-          )}
-
-          {/* Resume Production Notice */}
-          {resumeMode && (
-            <Alert severity="info" sx={{ mb: 3 }}>
-              <Typography>
-                Resuming production from step {activeStep + 1}: {steps[activeStep]?.name}
-              </Typography>
             </Alert>
           )}
 
@@ -1012,7 +521,7 @@ function ProductionSteps({ selectedBatch, onBackToSelection, onProductionComplet
                           </Box>
 
                           {/* Action Buttons */}
-                          {isActive && (productionStarted || resumeMode) && (
+                          {isActive && productionStarted && (
                             <Box display="flex" gap={2} mt={2}>
                               <Button 
                                 variant="contained"
@@ -1023,6 +532,13 @@ function ProductionSteps({ selectedBatch, onBackToSelection, onProductionComplet
                               >
                                 Complete Step
                               </Button>
+                              <Button 
+                                variant="outlined"
+                                startIcon={<Pause />}
+                                disabled={loading}
+                              >
+                                Pause
+                              </Button>
                             </Box>
                           )}
 
@@ -1030,7 +546,7 @@ function ProductionSteps({ selectedBatch, onBackToSelection, onProductionComplet
                           {isCompleted && completionData && (
                             <Box mt={2} p={2} bgcolor="success.light" borderRadius={1}>
                               <Typography variant="body2" color="success.dark">
-                                ✓ Completed at {new Date(completionData.completedAt).toLocaleTimeString()}
+                                ✓ Completed {completionData.completedAt && `at ${new Date(completionData.completedAt).toLocaleTimeString()}`}
                               </Typography>
                               {completionData.actualDuration && (
                                 <Typography variant="body2" color="success.dark">

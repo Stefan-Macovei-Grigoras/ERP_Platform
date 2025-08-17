@@ -187,7 +187,61 @@ const getBatch = async (req, res) => {
   }
 };
 
-// POST /api/batches
+// // POST /batches
+// const createBatch = async (req, res) => {
+//   const { productId, stage = 'due', expectedYield, notes = '' } = req.body;
+//   logger.log(`[CREATE BATCH] Received: productId=${productId}, stage=${stage}`);
+  
+//   try {
+//     // Validate productId is provided
+//     if (!productId) {
+//       return res.status(400).json({ message: 'productId is required' });
+//     }
+
+//     // Validate that product exists
+//     const product = await Product.findByPk(productId, {
+//       include: [{
+//         model: Recipe,
+//         attributes: ['id', 'name', 'yield', 'totalTime', 'steps']
+//       }]
+//     });
+    
+//     if (!product) {
+//       return res.status(404).json({ message: 'Product not found' });
+//     }
+
+//     const batchData = {
+//       productId,
+//       stage,
+//       notes,
+//       ...(expectedYield && { expectedYield }),
+//       // Set startedAt if stage is 'start-processing'
+//       ...(stage === 'start-processing' && { startedAt: new Date() })
+//     };
+
+//     const newBatch = await Batch.create(batchData);
+    
+//     // Fetch created batch with includes
+//     const createdBatch = await Batch.findByPk(newBatch.id, {
+//       include: [{
+//         model: Product,
+//         attributes: ['id', 'name'],
+//         include: [{
+//           model: Recipe,
+//           attributes: ['id', 'name', 'yield', 'totalTime', 'steps']
+//         }]
+//       }]
+//     });
+
+//     logger.log(`[CREATE BATCH] Created batch with ID: ${newBatch.id}, productId: ${productId}, stage: ${stage}`);
+//     res.status(201).json(createdBatch);
+//   } catch (err) {
+//     logger.error('[CREATE BATCH] Error:', err);
+//     res.status(500).json({ message: 'Error creating batch' });
+//   }
+// };
+
+// POST /batches
 const createBatch = async (req, res) => {
   const { productId, stage = 'due', expectedYield, notes = '' } = req.body;
   logger.log(`[CREATE BATCH] Received: productId=${productId}, stage=${stage}`);
@@ -210,13 +264,21 @@ const createBatch = async (req, res) => {
       return res.status(404).json({ message: 'Product not found' });
     }
 
+    // Initialize currentSteps from recipe if available
+    let currentSteps = null;
+    if (product.Recipe && product.Recipe.steps && product.Recipe.steps.steps) {
+      currentSteps = product.Recipe.steps.steps.map(step => ({
+        stepNumber: step.number,
+        name: step.name,
+        completed: false
+      }));
+    }
+
     const batchData = {
       productId,
       stage,
-      notes,
-      ...(expectedYield && { expectedYield }),
-      // Set startedAt if stage is 'start-processing'
-      ...(stage === 'start-processing' && { startedAt: new Date() })
+      currentSteps,
+      ...(expectedYield && { expectedYield })
     };
 
     const newBatch = await Batch.create(batchData);

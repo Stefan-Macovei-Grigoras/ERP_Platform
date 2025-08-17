@@ -38,8 +38,6 @@ const menuItemsByRole = {
     { text: 'Products', icon: <LocalDining />, path: 'products' },
     { text: 'Inventory', icon: <Inventory />, path: 'inventory' },
     { text: 'All Batches', icon: <Schedule />, path: 'batches' },
-    // { text: 'Reports', icon: <Assessment />, path: 'reports' },
-    // { text: 'Settings', icon: <Settings />, path: 'settings' }
   ],
   factory: [
     { text: 'My Dashboard', icon: <Dashboard />, path: 'overview' },
@@ -94,33 +92,6 @@ function Sidebar({
   const menuItems = menuItemsByRole[userRole] || menuItemsByRole.admin;
   const branding = brandingByRole[userRole] || brandingByRole.admin;
 
-  // Get status indicator for some menu items
-  const getStatusChip = (path) => {
-    // Show status chips for certain items based on role
-    if (userRole === 'admin') {
-      if (path === 'users') {
-        return <Chip label="8" size="small" color="primary" />;
-      }
-      if (path === 'batches') {
-        return <Chip label="12" size="small" color="success" />;
-      }
-    }
-    
-    if (userRole === 'factory') {
-      if (path === 'my-batches') {
-        return <Chip label="3" size="small" color="warning" />;
-      }
-    }
-    
-    if (userRole === 'packaging') {
-      if (path === 'queue') {
-        return <Chip label="8" size="small" color="error" />;
-      }
-    }
-    
-    return null;
-  };
-
   // Drawer content that will be used in both mobile and desktop versions
   const drawer = (
     <Box>
@@ -155,7 +126,7 @@ function Sidebar({
       <List sx={{ mt: 1 }}>
         {menuItems.map((item) => {
           const isSelected = currentPage === item.path;
-          const statusChip = getStatusChip(item.path);
+          //const statusChip = getStatusChip(item.path);
           
           return (
             <ListItem key={item.text} disablePadding sx={{ px: 1 }}>
@@ -190,11 +161,6 @@ function Sidebar({
                     fontWeight: isSelected ? 600 : 400
                   }}
                 />
-                {statusChip && (
-                  <Box sx={{ ml: 1 }}>
-                    {statusChip}
-                  </Box>
-                )}
               </ListItemButton>
             </ListItem>
           );
