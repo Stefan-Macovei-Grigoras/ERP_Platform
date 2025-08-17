@@ -53,7 +53,7 @@ function setupWebSocket(server) {
     ws.on('message', (message) => {
       try {
         const data = JSON.parse(message);
-        logger.log('Sensor data received:', JSON.stringify(data));
+        //logger.log('Sensor data received:', JSON.stringify(data));
 
         // Broadcast to all other clients
         wss.clients.forEach((client) => {
