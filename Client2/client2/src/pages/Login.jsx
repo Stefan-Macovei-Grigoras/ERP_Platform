@@ -61,11 +61,12 @@ export default function Login() {
     <Box 
       sx={{ 
         minHeight: '100vh',
+        width: '105%',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        padding: 2
+        transform: 'translate(-10px, -10px)'
       }}
     >
       <Fade in={true} timeout={800}>
