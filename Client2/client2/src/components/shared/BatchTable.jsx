@@ -1,3 +1,4 @@
+
 // import React, { useState, useEffect } from 'react';
 // import {
 //   Box,
@@ -34,7 +35,11 @@
 //   ListItemText as MuiListItemText,
 //   Card,
 //   CardContent,
-//   Divider
+//   Divider,
+//   FormControl,
+//   InputLabel,
+//   Select,
+//   FormHelperText
 // } from '@mui/material';
 // import {
 //   Refresh,
@@ -50,7 +55,8 @@
 //   Timer,
 //   Person,
 //   Add,
-//   LocalDining
+//   LocalDining,
+//   Save
 // } from '@mui/icons-material';
 // import adminApiService from '../../services/admin/adminApiService';
 
@@ -147,8 +153,28 @@
 //   // Dialog states
 //   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 //   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+//   const [editDialogOpen, setEditDialogOpen] = useState(false);
 //   const [selectedProduct, setSelectedProduct] = useState(null);
 //   const [submitting, setSubmitting] = useState(false);
+
+//   // Edit form states
+//   const [editForm, setEditForm] = useState({
+//     productId: '',
+//     stage: '',
+//     notes: ''
+//   });
+//   const [editFormErrors, setEditFormErrors] = useState({});
+
+//   // Available stages for editing
+//   const availableStages = [
+//     { value: 'due', label: 'Due (Ready to Start)' },
+//     { value: 'start-processing', label: 'Start Processing' },
+//     { value: 'processing', label: 'Processing' },
+//     { value: 'end-processing', label: 'End Processing' },
+//     { value: 'packaging', label: 'Packaging' },
+//     { value: 'done', label: 'Done' },
+//     { value: 'paused', label: 'Paused' }
+//   ];
 
 //   useEffect(() => {
 //     fetchBatches();
@@ -195,42 +221,27 @@
 //     }
 //   };
 
-//   // // Status color mapping
-//   // const getStatusColor = (stage) => {
-//   //   switch (stage?.toLowerCase()) {
-//   //     case 'done':
-//   //       return 'success';
-//   //     case 'packaging':
-//   //       return 'warning';
-//   //     case 'processing':
-//   //     case 'start-processing':
-//   //     case 'end-processing':
-//   //       return 'error';
-//   //     case 'due':
-//   //       return 'default';
-//   //     default:
-//   //       return 'default';
-//   //   }
-//   // };
-
+//   // Status color mapping with distinct colors for each stage
 //   const getStatusColor = (stage) => {
-//   switch (stage?.toLowerCase()) {
-//     case 'done':
-//       return 'success';      // Green - completed
-//     case 'packaging':
-//       return 'warning';      // Orange - ready for packaging
-//     case 'start-processing':
-//       return 'primary';      // Blue - production started
-//     case 'processing':
-//       return 'info';         // Light blue - actively processing
-//     case 'end-processing':
-//       return 'secondary';    // Purple - processing finished
-//     case 'due':
-//       return 'error';        // Red - paused/stopped
-//     default:
-//       return 'default';
-//   }
-// };
+//     switch (stage?.toLowerCase()) {
+//       case 'done':
+//         return 'success';      // Green - completed
+//       case 'packaging':
+//         return 'warning';      // Orange - ready for packaging
+//       case 'start-processing':
+//         return 'primary';      // Blue - production started
+//       case 'processing':
+//         return 'info';         // Light blue - actively processing
+//       case 'end-processing':
+//         return 'secondary';    // Purple - processing finished
+//       case 'due':
+//         return 'error';        // Red - waiting to start
+//       case 'paused':
+//         return 'default';      // Gray - paused/stopped
+//       default:
+//         return 'default';
+//     }
+//   };
 
 //   // Get product name by ID
 //   const getProductName = (productId) => {
@@ -247,6 +258,47 @@
 //   const handleMenuClose = () => {
 //     setMenuAnchor(null);
 //     setSelectedBatch(null);
+//   };
+
+//   // Initialize edit form with batch data
+//   const initializeEditForm = (batch) => {
+//     setEditForm({
+//       productId: batch.productId || '',
+//       stage: batch.stage || '',
+//       notes: batch.notes || ''
+//     });
+//     setEditFormErrors({});
+//   };
+
+//   // Handle edit form changes
+//   const handleEditFormChange = (field, value) => {
+//     setEditForm(prev => ({
+//       ...prev,
+//       [field]: value
+//     }));
+//     // Clear error for this field
+//     if (editFormErrors[field]) {
+//       setEditFormErrors(prev => ({
+//         ...prev,
+//         [field]: ''
+//       }));
+//     }
+//   };
+
+//   // Validate edit form
+//   const validateEditForm = () => {
+//     const errors = {};
+    
+//     if (!editForm.productId) {
+//       errors.productId = 'Product is required';
+//     }
+    
+//     if (!editForm.stage) {
+//       errors.stage = 'Stage is required';
+//     }
+    
+//     setEditFormErrors(errors);
+//     return Object.keys(errors).length === 0;
 //   };
 
 //   // Handle batch actions
@@ -273,13 +325,14 @@
 //           setDetailsDialogOpen(true);
 //           return; // Don't refresh data for view action
 //         case 'edit':
-//           console.log('Edit batch:', selectedBatch.id);
-//           break;
+//           initializeEditForm(selectedBatch);
+//           setEditDialogOpen(true);
+//           return; // Don't refresh data for edit action opening
 //         default:
 //           break;
 //       }
       
-//       // Refresh data after action (except for view)
+//       // Refresh data after action (except for view and edit)
 //       await fetchBatches();
       
 //     } catch (err) {
@@ -288,6 +341,35 @@
 //     }
     
 //     handleMenuClose();
+//   };
+
+//   // Handle edit form submission
+//   const handleEditSubmit = async () => {
+//     if (!validateEditForm()) {
+//       return;
+//     }
+
+//     try {
+//       setSubmitting(true);
+//       setError(null);
+
+//       const updateData = {
+//         productId: parseInt(editForm.productId),
+//         stage: editForm.stage,
+//         notes: editForm.notes || null
+//       };
+
+//       await adminApiService.updateBatch(selectedBatch.id, updateData);
+//       await fetchBatches();
+//       setEditDialogOpen(false);
+//       setSelectedBatch(null);
+      
+//     } catch (err) {
+//       console.error('Failed to update batch:', err);
+//       setError('Failed to update batch. Please try again.');
+//     } finally {
+//       setSubmitting(false);
+//     }
 //   };
 
 //   // Get available actions based on user role and batch status
@@ -423,7 +505,7 @@
 //   };
 
 //   return (
-//     <Paper elevation={2} sx={{ height: 'fit-content' }}>
+//     <Paper elevation={2} sx={{ height: 'fit-content'}}>
 //       {/* Error Alert */}
 //       {error && (
 //         <Alert severity="error" sx={{ m: 2 }} onClose={() => setError(null)}>
@@ -472,7 +554,7 @@
 //       </Box>
 
 //       {/* Batches table */}
-//       <TableContainer>
+//       <TableContainer >
 //         <Table size={dense ? "small" : "medium"}>
 //           <TableHead>
 //             <TableRow>
@@ -517,14 +599,15 @@
 //                   </TableCell>
                   
 //                   <TableCell>
-//                     <Badge
+//                     <Chip
+//                       label={batch.stage}
 //                       color={getStatusColor(batch.stage)}
-//                       variant="dot"
-//                       sx={{ mr: 1 }}
+//                       size="small"
+//                       sx={{ 
+//                         fontWeight: 'medium',
+//                         textTransform: 'capitalize'
+//                       }}
 //                     />
-//                     <Typography variant="body2">
-//                       {batch.stage}
-//                     </Typography>
 //                   </TableCell>
                   
 //                   <TableCell>
@@ -598,6 +681,122 @@
 //           </MenuItem>
 //         ))}
 //       </Menu>
+
+//       {/* Edit Batch Dialog */}
+//       <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
+//         <DialogTitle>
+//           <Box display="flex" alignItems="center" gap={2}>
+//             <Edit color="primary" />
+//             <Typography variant="h6" fontWeight="bold">
+//               Edit Batch #{selectedBatch?.id}
+//             </Typography>
+//           </Box>
+//         </DialogTitle>
+//         <DialogContent>
+//           <Box sx={{ mt: 2 }}>
+//             <Grid container spacing={3}>
+//               {/* Product Selection */}
+//               <Grid item xs={12}>
+//                 <FormControl fullWidth error={!!editFormErrors.productId}>
+//                   <InputLabel>Product</InputLabel>
+//                   <Select
+//                     value={editForm.productId}
+//                     onChange={(e) => handleEditFormChange('productId', e.target.value)}
+//                     label="Product"
+//                   >
+//                     {products.map((product) => (
+//                       <MenuItem key={product.id} value={product.id}>
+//                         {product.name} (ID: {product.id})
+//                       </MenuItem>
+//                     ))}
+//                   </Select>
+//                   {editFormErrors.productId && (
+//                     <FormHelperText>{editFormErrors.productId}</FormHelperText>
+//                   )}
+//                 </FormControl>
+//               </Grid>
+
+//               {/* Stage Selection */}
+//               <Grid item xs={12}>
+//                 <FormControl fullWidth error={!!editFormErrors.stage}>
+//                   <InputLabel>Stage</InputLabel>
+//                   <Select
+//                     value={editForm.stage}
+//                     onChange={(e) => handleEditFormChange('stage', e.target.value)}
+//                     label="Stage"
+//                   >
+//                     {availableStages.map((stage) => (
+//                       <MenuItem key={stage.value} value={stage.value}>
+//                         <Box display="flex" alignItems="center" gap={1}>
+//                           <Chip 
+//                             label={stage.value} 
+//                             color={getStatusColor(stage.value)} 
+//                             size="small" 
+//                           />
+//                           <Typography>{stage.label}</Typography>
+//                         </Box>
+//                       </MenuItem>
+//                     ))}
+//                   </Select>
+//                   {editFormErrors.stage && (
+//                     <FormHelperText>{editFormErrors.stage}</FormHelperText>
+//                   )}
+//                 </FormControl>
+//               </Grid>
+
+//               {/* Notes */}
+//               <Grid item xs={12}>
+//                 <TextField
+//                   fullWidth
+//                   label="Notes (Optional)"
+//                   value={editForm.notes}
+//                   onChange={(e) => handleEditFormChange('notes', e.target.value)}
+//                   multiline
+//                   rows={3}
+//                   placeholder="Add any notes about this batch..."
+//                 />
+//               </Grid>
+
+//               {/* Current Batch Info */}
+//               <Grid item xs={12}>
+//                 <Card variant="outlined" sx={{ bgcolor: 'grey.50' }}>
+//                   <CardContent>
+//                     <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+//                       Current Batch Information
+//                     </Typography>
+//                     <Box display="flex" gap={2} flexWrap="wrap">
+//                       <Chip 
+//                         label={`Current: ${selectedBatch?.stage}`} 
+//                         color={getStatusColor(selectedBatch?.stage)} 
+//                         size="small" 
+//                       />
+//                       <Typography variant="body2" color="textSecondary">
+//                         Product: {getProductName(selectedBatch?.productId)}
+//                       </Typography>
+//                       <Typography variant="body2" color="textSecondary">
+//                         Created: {selectedBatch?.createdAt ? new Date(selectedBatch.createdAt).toLocaleDateString() : 'N/A'}
+//                       </Typography>
+//                     </Box>
+//                   </CardContent>
+//                 </Card>
+//               </Grid>
+//             </Grid>
+//           </Box>
+//         </DialogContent>
+//         <DialogActions>
+//           <Button onClick={() => setEditDialogOpen(false)} disabled={submitting}>
+//             Cancel
+//           </Button>
+//           <Button 
+//             onClick={handleEditSubmit}
+//             variant="contained"
+//             disabled={submitting}
+//             startIcon={submitting ? <CircularProgress size={20} /> : <Save />}
+//           >
+//             {submitting ? 'Saving...' : 'Save Changes'}
+//           </Button>
+//         </DialogActions>
+//       </Dialog>
 
 //       {/* Create Batch Dialog */}
 //       <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="sm" fullWidth>
@@ -876,7 +1075,11 @@ import {
   ListItemText as MuiListItemText,
   Card,
   CardContent,
-  Divider
+  Divider,
+  FormControl,
+  InputLabel,
+  Select,
+  FormHelperText
 } from '@mui/material';
 import {
   Refresh,
@@ -892,7 +1095,9 @@ import {
   Timer,
   Person,
   Add,
-  LocalDining
+  LocalDining,
+  Save,
+  Cancel
 } from '@mui/icons-material';
 import adminApiService from '../../services/admin/adminApiService';
 
@@ -975,6 +1180,7 @@ function BatchTable({
   dense = false,
   currentUserId = null
 }) {
+  // State declarations
   const [batches, setBatches] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -989,9 +1195,28 @@ function BatchTable({
   // Dialog states
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // Edit form states
+  const [editForm, setEditForm] = useState({
+    stage: '',
+    lastCompletedStep: 0
+  });
+
+  // Available batch stages
+  const availableStages = [
+    { value: 'due', label: 'Due', description: 'Waiting to start production' },
+    { value: 'start-processing', label: 'Start Processing', description: 'Production has begun' },
+    { value: 'processing', label: 'Processing', description: 'Currently in production' },
+    { value: 'end-processing', label: 'End Processing', description: 'Production completed' },
+    { value: 'packaging', label: 'Packaging', description: 'Ready for packaging' },
+    { value: 'done', label: 'Done', description: 'Completely finished' },
+    { value: 'paused', label: 'Paused', description: 'Production paused' }
+  ];
+
+  // Effects
   useEffect(() => {
     fetchBatches();
     if (userRole === 'admin') {
@@ -999,6 +1224,7 @@ function BatchTable({
     }
   }, [showAll, filterByUser, maxRows, orderBy, order, currentUserId]);
 
+  // API Functions
   const fetchBatches = async () => {
     try {
       setLoading(true);
@@ -1037,87 +1263,80 @@ function BatchTable({
     }
   };
 
-  // Status color mapping with distinct colors for each stage
+  // Utility Functions
   const getStatusColor = (stage) => {
     switch (stage?.toLowerCase()) {
       case 'done':
-        return 'success';      // Green - completed
+        return 'success';
       case 'packaging':
-        return 'warning';      // Orange - ready for packaging
+        return 'warning';
       case 'start-processing':
-        return 'primary';      // Blue - production started
+        return 'primary';
       case 'processing':
-        return 'info';         // Light blue - actively processing
+        return 'info';
       case 'end-processing':
-        return 'secondary';    // Purple - processing finished
+        return 'secondary';
       case 'due':
-        return 'error';        // Red - waiting to start
+        return 'error';
       case 'paused':
-        return 'default';      // Gray - paused/stopped
+        return 'default';
       default:
         return 'default';
     }
   };
 
-  // Get product name by ID
   const getProductName = (productId) => {
     const product = products.find(p => p.id === productId);
     return product ? product.name : `Product #${productId}`;
   };
 
-  // Handle action menu
-  const handleMenuClick = (event, batch) => {
-    setMenuAnchor(event.currentTarget);
-    setSelectedBatch(batch);
-  };
-
-  const handleMenuClose = () => {
-    setMenuAnchor(null);
-    setSelectedBatch(null);
-  };
-
-  // Handle batch actions
-  const handleBatchAction = async (action) => {
-    try {
-      setError(null);
-      
-      switch (action) {
-        case 'start':
-          await adminApiService.updateBatchStatus(selectedBatch.id, 'processing');
-          break;
-        case 'pause':
-          await adminApiService.updateBatchStatus(selectedBatch.id, 'paused');
-          break;
-        case 'complete':
-          await adminApiService.updateBatchStatus(selectedBatch.id, 'done');
-          break;
-        case 'delete':
-          if (window.confirm(`Are you sure you want to delete batch ${selectedBatch.id}?`)) {
-            await adminApiService.deleteBatch(selectedBatch.id);
-          }
-          break;
-        case 'view':
-          setDetailsDialogOpen(true);
-          return; // Don't refresh data for view action
-        case 'edit':
-          console.log('Edit batch:', selectedBatch.id);
-          break;
-        default:
-          break;
-      }
-      
-      // Refresh data after action (except for view)
-      await fetchBatches();
-      
-    } catch (err) {
-      console.error('Failed to execute batch action:', err);
-      setError('Failed to execute action. Please try again.');
+  const getAvailableSteps = () => {
+    if (!selectedBatch?.currentSteps || !Array.isArray(selectedBatch.currentSteps)) {
+      return [];
     }
-    
-    handleMenuClose();
+    return selectedBatch.currentSteps.sort((a, b) => a.stepNumber - b.stepNumber);
   };
 
-  // Get available actions based on user role and batch status
+  const getDisplayedBatches = () => {
+    if (maxRows) {
+      return batches.slice(0, maxRows);
+    }
+    return batches.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  };
+
+  const formatBatchDetails = (batch) => {
+    const details = [
+      { 
+        label: 'Product/Batch Name', 
+        value: `${getProductName(batch.productId)} (Batch #${batch.id})`,
+        icon: <LocalDining />
+      },
+      { 
+        label: 'Current Stage', 
+        value: batch.stage?.charAt(0).toUpperCase() + batch.stage?.slice(1) || 'Unknown',
+        icon: <Assignment />,
+        chip: true,
+        chipColor: getStatusColor(batch.stage)
+      },
+      { 
+        label: 'Last Completed Step', 
+        value: getLastCompletedStep(batch),
+        icon: <CheckCircle />
+      },
+      { 
+        label: 'Time Until Completion', 
+        value: getEstimatedCompletion(batch),
+        icon: <Timer />
+      },
+      { 
+        label: 'Created Date', 
+        value: batch.createdAt ? new Date(batch.createdAt).toLocaleString() : 'N/A',
+        icon: <Add />
+      }
+    ];
+    return details;
+  };
+
   const getAvailableActions = (batch) => {
     const actions = [];
     
@@ -1153,7 +1372,107 @@ function BatchTable({
     return actions;
   };
 
-  // Handle create batch
+  // Event Handlers
+  const handleMenuClick = (event, batch) => {
+    setMenuAnchor(event.currentTarget);
+    setSelectedBatch(batch);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchor(null);
+    setSelectedBatch(null);
+  };
+
+  const initializeEditForm = (batch) => {
+    const lastCompletedStepNumber = batch.currentSteps && Array.isArray(batch.currentSteps) 
+      ? Math.max(...batch.currentSteps.filter(step => step.completed).map(step => step.stepNumber), 0)
+      : 0;
+
+    setEditForm({
+      stage: batch.stage || '',
+      lastCompletedStep: lastCompletedStepNumber
+    });
+  };
+
+  const handleBatchAction = async (action) => {
+    try {
+      setError(null);
+      
+      switch (action) {
+        case 'start':
+          await adminApiService.updateBatchStatus(selectedBatch.id, 'processing');
+          break;
+        case 'pause':
+          await adminApiService.updateBatchStatus(selectedBatch.id, 'paused');
+          break;
+        case 'complete':
+          await adminApiService.updateBatchStatus(selectedBatch.id, 'done');
+          break;
+        case 'delete':
+          if (window.confirm(`Are you sure you want to delete batch ${selectedBatch.id}?`)) {
+            await adminApiService.deleteBatch(selectedBatch.id);
+          }
+          break;
+        case 'view':
+          setDetailsDialogOpen(true);
+          return;
+        case 'edit':
+          initializeEditForm(selectedBatch);
+          setEditDialogOpen(true);
+          return;
+        default:
+          break;
+      }
+      
+      await fetchBatches();
+      
+    } catch (err) {
+      console.error('Failed to execute batch action:', err);
+      setError('Failed to execute action. Please try again.');
+    }
+    
+    handleMenuClose();
+  };
+
+  const handleEditSubmit = async () => {
+    try {
+      setSubmitting(true);
+      setError(null);
+
+      const updateData = {
+        stage: editForm.stage
+      };
+
+      // If stage is start-processing and we have steps, update the completion status
+      if (editForm.stage === 'start-processing' && selectedBatch.currentSteps && editForm.lastCompletedStep > 0) {
+        // Mark steps as completed up to the specified step number
+        const updatedSteps = selectedBatch.currentSteps.map(step => ({
+          ...step,
+          completed: step.stepNumber <= editForm.lastCompletedStep,
+          completedAt: step.stepNumber <= editForm.lastCompletedStep ? new Date().toISOString() : null
+        }));
+        
+        updateData.currentSteps = updatedSteps;
+      }
+
+      // Call API to update batch
+      await adminApiService.updateBatch(selectedBatch.id, updateData);
+      
+      // Refresh data
+      await fetchBatches();
+      
+      // Close dialog
+      setEditDialogOpen(false);
+      handleMenuClose();
+      
+    } catch (err) {
+      console.error('Failed to update batch:', err);
+      setError('Failed to update batch. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleCreateBatch = () => {
     setSelectedProduct(null);
     setCreateDialogOpen(true);
@@ -1185,14 +1504,12 @@ function BatchTable({
     }
   };
 
-  // Handle sorting
   const handleSort = (property) => {
     const isAsc = orderBy === property && order === 'asc';
     setOrder(isAsc ? 'desc' : 'asc');
     setOrderBy(property);
   };
 
-  // Handle pagination
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -1204,49 +1521,6 @@ function BatchTable({
 
   const handleRefresh = () => {
     fetchBatches();
-  };
-
-  // Get displayed batches for pagination
-  const getDisplayedBatches = () => {
-    if (maxRows) {
-      return batches.slice(0, maxRows);
-    }
-    return batches.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-  };
-
-  // Format batch details for display
-  const formatBatchDetails = (batch) => {
-    const details = [
-      { 
-        label: 'Product/Batch Name', 
-        value: `${getProductName(batch.productId)} (Batch #${batch.id})`,
-        icon: <LocalDining />
-      },
-      { 
-        label: 'Current Stage', 
-        value: batch.stage?.charAt(0).toUpperCase() + batch.stage?.slice(1) || 'Unknown',
-        icon: <Assignment />,
-        chip: true,
-        chipColor: getStatusColor(batch.stage)
-      },
-      { 
-        label: 'Last Completed Step', 
-        value: getLastCompletedStep(batch),
-        icon: <CheckCircle />
-      },
-      { 
-        label: 'Time Until Completion', 
-        value: getEstimatedCompletion(batch),
-        icon: <Timer />
-      },
-      { 
-        label: 'Created Date', 
-        value: batch.createdAt ? new Date(batch.createdAt).toLocaleString() : 'N/A',
-        icon: <Add />
-      }
-    ];
-
-    return details;
   };
 
   return (
@@ -1299,7 +1573,7 @@ function BatchTable({
       </Box>
 
       {/* Batches table */}
-      <TableContainer >
+      <TableContainer>
         <Table size={dense ? "small" : "medium"}>
           <TableHead>
             <TableRow>
@@ -1426,6 +1700,116 @@ function BatchTable({
           </MenuItem>
         ))}
       </Menu>
+
+      {/* Edit Batch Dialog */}
+      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          <Box display="flex" alignItems="center" gap={2}>
+            <Edit color="primary" />
+            <Typography variant="h6" fontWeight="bold">
+              Edit Batch #{selectedBatch?.id}
+            </Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2 }}>
+            <Grid container spacing={3}>
+              {/* Current Stage Selection */}
+              <Grid item xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Batch Stage</InputLabel>
+                  <Select
+                    value={editForm.stage}
+                    onChange={(e) => setEditForm({ ...editForm, stage: e.target.value })}
+                    label="Batch Stage"
+                  >
+                    {availableStages.map((stage) => (
+                      <MenuItem key={stage.value} value={stage.value}>
+                        <Box>
+                          <Typography variant="body1" fontWeight="medium">
+                            {stage.label}
+                          </Typography>
+                          <Typography variant="caption" color="textSecondary">
+                            {stage.description}
+                          </Typography>
+                        </Box>
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  <FormHelperText>
+                    Select the current stage of the batch
+                  </FormHelperText>
+                </FormControl>
+              </Grid>
+
+              {/* Last Completed Step - Only show if stage is start-processing */}
+              {editForm.stage === 'start-processing' && getAvailableSteps().length > 0 && (
+                <Grid item xs={12}>
+                  <FormControl fullWidth>
+                    <InputLabel>Last Completed Step</InputLabel>
+                    <Select
+                      value={editForm.lastCompletedStep}
+                      onChange={(e) => setEditForm({ ...editForm, lastCompletedStep: e.target.value })}
+                      label="Last Completed Step"
+                    >
+                      <MenuItem value={0}>
+                        <Typography color="textSecondary">No steps completed</Typography>
+                      </MenuItem>
+                      {getAvailableSteps().map((step) => (
+                        <MenuItem key={step.stepNumber} value={step.stepNumber}>
+                          <Box>
+                            <Typography variant="body1">
+                              Step {step.stepNumber}: {step.name}
+                            </Typography>
+                          </Box>
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    <FormHelperText>
+                      All steps up to and including this step will be marked as completed
+                    </FormHelperText>
+                  </FormControl>
+                </Grid>
+              )}
+
+              {/* Current Batch Info */}
+              <Grid item xs={12}>
+                <Card variant="outlined" sx={{ bgcolor: 'grey.50' }}>
+                  <CardContent>
+                    <Typography variant="body2" color="textSecondary" gutterBottom>
+                      Current Batch Information:
+                    </Typography>
+                    <Typography variant="body1" fontWeight="medium">
+                      Product: {getProductName(selectedBatch?.productId)}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      Current Stage: {selectedBatch?.stage}
+                    </Typography>
+                    {selectedBatch?.currentSteps && (
+                      <Typography variant="body2" color="textSecondary">
+                        Steps: {selectedBatch.currentSteps.filter(s => s.completed).length} / {selectedBatch.currentSteps.length} completed
+                      </Typography>
+                    )}
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditDialogOpen(false)} disabled={submitting} startIcon={<Cancel />}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleEditSubmit}
+            variant="contained"
+            disabled={submitting || !editForm.stage}
+            startIcon={submitting ? <CircularProgress size={20} /> : <Save />}
+          >
+            {submitting ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Create Batch Dialog */}
       <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="sm" fullWidth>
@@ -1618,7 +2002,7 @@ function BatchTable({
                 </Card>
               )}
 
-              {/* Technical Details Card (Collapsible) */}
+              {/* Technical Details Card */}
               <Card elevation={1}>
                 <CardContent>
                   <Typography variant="h6" gutterBottom sx={{ mb: 2, color: 'text.secondary' }}>
