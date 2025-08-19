@@ -635,20 +635,6 @@ function RecipeDialog({ open, onClose, product }) {
     setNewStep({ name: "", duration: 0, temperature: 0, instructions: "" });
   };
 
-  // const handleSave = async () => {
-  //   try {
-  //     setSaving(true);
-  //     await adminApiService.updateRecipe(recipe.id, {
-  //       ...recipe,
-  //       steps: { steps }   // keep DB structure
-  //     });
-  //     onClose();
-  //   } catch (err) {
-  //     console.error("Failed to save recipe", err);
-  //   } finally {
-  //     setSaving(false);
-  //   }
-  // };
 const handleSave = async () => {
   try {
     setSaving(true);
@@ -703,14 +689,14 @@ const handleSave = async () => {
                     onChange={(e) => handleUpdateStep(i, "temperature", e.target.value)}
                   />
                 </Box>
-                <Box display="flex" justifyContent="flex-end" gap={1} mt = {-3}>
-                  <Button
+                <Box display="flex" justifyContent="right" gap={1} mt = {-4}>
+                  {/* <Button
                     variant="outlined"
                     size="small"
                     onClick={() => handleUpdateStep(i, "number", i + 1)}
                   >
                     Update
-                  </Button>
+                  </Button> */}
                   <Button
                     variant="outlined"
                     color="error"
@@ -837,11 +823,18 @@ function ProductCatalog() {
         price: parseFloat(formData.price) || 0,
         quantity: parseInt(formData.quantity) || 0
       };
+      // if (isEdit) {
+      //   const updatedProduct = await adminApiService.updateProduct(selectedProduct.id, productData);
+      //   console.log('Updated product:', updatedProduct); // Debug line
+      //   setProducts(prev => prev.map(p => p.id === selectedProduct.id ? updatedProduct : p));
+      //   setEditDialogOpen(false);
       if (isEdit) {
-        const updatedProduct = await adminApiService.updateProduct(selectedProduct.id, productData);
+        const response = await adminApiService.updateProduct(selectedProduct.id, productData);
+        const updatedProduct = response.product; // Extract the actual product object
         setProducts(prev => prev.map(p => p.id === selectedProduct.id ? updatedProduct : p));
         setEditDialogOpen(false);
-      } else {
+      }
+       else {
         const newProduct = await adminApiService.createProduct(productData);
         setProducts(prev => [...prev, newProduct]);
         setAddDialogOpen(false);
@@ -867,54 +860,241 @@ function ProductCatalog() {
     }
   };
 
+  // return (
+  //   <Box>
+  //     {error && (
+  //       <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+  //         {error}
+  //       </Alert>
+  //     )}
+
+  //     <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+  //       <Box>
+  //         <Typography variant="h5" fontWeight="bold">Product Catalog</Typography>
+  //         <Typography variant="body2" color="textSecondary">Manage products and inventory</Typography>
+  //       </Box>
+  //       <Box display="flex" gap={1}>
+  //         <IconButton onClick={fetchProducts} disabled={loading}><Refresh /></IconButton>
+  //         <Button variant="contained" startIcon={<Add />} onClick={handleAddProduct}>Add New Product</Button>
+  //       </Box>
+  //     </Box>
+
+  //     {loading ? (
+  //       <Grid container spacing={3}>
+  //         {Array.from({ length: 6 }).map((_, i) => (
+  //           <Grid item xs={12} sm={6} md={4} key={i}><ProductCardSkeleton /></Grid>
+  //         ))}
+  //       </Grid>
+  //     ) : products.length > 0 ? (
+  //       <Grid container spacing={3}>
+  //         {products.map((product) => (
+  //           <Grid item xs={12} sm={6} md={4} key={product.id}>
+  //             <ProductCard product={product} onEdit={handleEditProduct} onDelete={handleDeleteProduct} onRecipe={handleRecipe} />
+  //           </Grid>
+  //         ))}
+  //       </Grid>
+  //     ) : (
+  //       <Paper elevation={2} sx={{ p: 4, textAlign: 'center' }}>
+  //         <Typography color="textSecondary">No products found</Typography>
+  //       </Paper>
+  //     )}
+
+  //     {/* existing Add/Edit/Delete dialogs remain here unchanged... */}
+
+  //     <RecipeDialog
+  //       open={recipeDialogOpen}
+  //       onClose={() => setRecipeDialogOpen(false)}
+  //       product={selectedProduct}
+  //     />
+  //   </Box>
+  // );
   return (
-    <Box>
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
+  <Box>
+    {error && (
+      <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+        {error}
+      </Alert>
+    )}
 
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Box>
-          <Typography variant="h5" fontWeight="bold">Product Catalog</Typography>
-          <Typography variant="body2" color="textSecondary">Manage products and inventory</Typography>
-        </Box>
-        <Box display="flex" gap={1}>
-          <IconButton onClick={fetchProducts} disabled={loading}><Refresh /></IconButton>
-          <Button variant="contained" startIcon={<Add />} onClick={handleAddProduct}>Add New Product</Button>
-        </Box>
+    <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+      <Box>
+        <Typography variant="h5" fontWeight="bold">Product Catalog</Typography>
+        <Typography variant="body2" color="textSecondary">Manage products and inventory</Typography>
       </Box>
-
-      {loading ? (
-        <Grid container spacing={3}>
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Grid item xs={12} sm={6} md={4} key={i}><ProductCardSkeleton /></Grid>
-          ))}
-        </Grid>
-      ) : products.length > 0 ? (
-        <Grid container spacing={3}>
-          {products.map((product) => (
-            <Grid item xs={12} sm={6} md={4} key={product.id}>
-              <ProductCard product={product} onEdit={handleEditProduct} onDelete={handleDeleteProduct} onRecipe={handleRecipe} />
-            </Grid>
-          ))}
-        </Grid>
-      ) : (
-        <Paper elevation={2} sx={{ p: 4, textAlign: 'center' }}>
-          <Typography color="textSecondary">No products found</Typography>
-        </Paper>
-      )}
-
-      {/* existing Add/Edit/Delete dialogs remain here unchanged... */}
-
-      <RecipeDialog
-        open={recipeDialogOpen}
-        onClose={() => setRecipeDialogOpen(false)}
-        product={selectedProduct}
-      />
+      <Box display="flex" gap={1}>
+        <IconButton onClick={fetchProducts} disabled={loading}><Refresh /></IconButton>
+        <Button variant="contained" startIcon={<Add />} onClick={handleAddProduct}>Add New Product</Button>
+      </Box>
     </Box>
-  );
+
+    {loading ? (
+      <Grid container spacing={3}>
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Grid item xs={12} sm={6} md={4} key={i}><ProductCardSkeleton /></Grid>
+        ))}
+      </Grid>
+    ) : products.length > 0 ? (
+      <Grid container spacing={3}>
+        {products.map((product) => (
+          <Grid item xs={12} sm={6} md={4} key={product.id}>
+            <ProductCard product={product} onEdit={handleEditProduct} onDelete={handleDeleteProduct} onRecipe={handleRecipe} />
+          </Grid>
+        ))}
+      </Grid>
+    ) : (
+      <Paper elevation={2} sx={{ p: 4, textAlign: 'center' }}>
+        <Typography color="textSecondary">No products found</Typography>
+      </Paper>
+    )}
+
+    {/* ADD PRODUCT DIALOG */}
+    <Dialog open={addDialogOpen} onClose={() => setAddDialogOpen(false)} maxWidth="sm" fullWidth>
+      <DialogTitle>Add New Product</DialogTitle>
+      <DialogContent>
+        <Grid container spacing={2} sx={{ mt: 1 }}>
+          <Grid item xs={12}>
+            <TextField
+              label="Product Name"
+              placeholder="Enter product name"
+              value={formData.name}
+              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              fullWidth
+              required
+              disabled={submitting}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Price (RON)"
+              type="number"
+              placeholder="Enter price"
+              value={formData.price}
+              onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
+              fullWidth
+              required
+              disabled={submitting}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Quantity"
+              type="number"
+              placeholder="Enter quantity"
+              value={formData.quantity}
+              onChange={(e) => setFormData(prev => ({ ...prev, quantity: e.target.value }))}
+              fullWidth
+              required
+              disabled={submitting}
+            />
+          </Grid>
+        </Grid>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={() => setAddDialogOpen(false)} disabled={submitting}>Cancel</Button>
+        <Button 
+          onClick={() => handleSubmit(false)} 
+          variant="contained"
+          disabled={submitting || !formData.name || !formData.price || !formData.quantity}
+          startIcon={submitting ? <CircularProgress size={20} /> : null}
+        >
+          {submitting ? 'Adding...' : 'Add Product'}
+        </Button>
+      </DialogActions>
+    </Dialog>
+
+    {/* EDIT PRODUCT DIALOG */}
+    <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
+      <DialogTitle>Edit Product</DialogTitle>
+      <DialogContent>
+        <Grid container spacing={2} sx={{ mt: 1 }}>
+          <Grid item xs={12}>
+            <TextField
+              label="Product Name"
+              value={formData.name}
+              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              fullWidth
+              required
+              disabled={submitting}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Price (RON)"
+              type="number"
+              value={formData.price}
+              onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
+              fullWidth
+              required
+              disabled={submitting}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Quantity"
+              type="number"
+              value={formData.quantity}
+              onChange={(e) => setFormData(prev => ({ ...prev, quantity: e.target.value }))}
+              fullWidth
+              required
+              disabled={submitting}
+            />
+          </Grid>
+        </Grid>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={() => setEditDialogOpen(false)} disabled={submitting}>Cancel</Button>
+        <Button 
+          onClick={() => handleSubmit(true)} 
+          variant="contained"
+          disabled={submitting || !formData.name || !formData.price || !formData.quantity}
+          startIcon={submitting ? <CircularProgress size={20} /> : null}
+        >
+          {submitting ? 'Updating...' : 'Update Product'}
+        </Button>
+      </DialogActions>
+    </Dialog>
+
+    {/* DELETE CONFIRMATION DIALOG */}
+    <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} maxWidth="sm">
+      <DialogTitle sx={{ color: 'error.main' }}>Delete Product</DialogTitle>
+      <DialogContent>
+        <Typography variant="body1" sx={{ mb: 2 }}>
+          Are you sure you want to delete the following product? This action cannot be undone.
+        </Typography>
+        <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+          <Typography variant="body1" fontWeight="medium">
+            {selectedProduct?.name || 'Unknown Product'}
+          </Typography>
+          <Typography variant="body2" color="textSecondary">
+            Price: {selectedProduct?.price || 0} RON
+          </Typography>
+          <Typography variant="body2" color="textSecondary">
+            Quantity: {selectedProduct?.quantity || 0} units
+          </Typography>
+        </Box>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={() => setDeleteDialogOpen(false)} disabled={submitting}>Cancel</Button>
+        <Button 
+          onClick={handleConfirmDelete}
+          variant="contained"
+          color="error"
+          disabled={submitting}
+          startIcon={submitting ? <CircularProgress size={20} /> : <Delete />}
+        >
+          {submitting ? 'Deleting...' : 'Delete Product'}
+        </Button>
+      </DialogActions>
+    </Dialog>
+
+    {/* RECIPE DIALOG */}
+    <RecipeDialog
+      open={recipeDialogOpen}
+      onClose={() => setRecipeDialogOpen(false)}
+      product={selectedProduct}
+    />
+  </Box>
+);
 }
 
 export default ProductCatalog;
