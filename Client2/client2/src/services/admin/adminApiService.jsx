@@ -1475,6 +1475,59 @@ class AdminApiService {
       throw error;
     }
   }
+
+  // ====================
+// RECIPE API
+// ====================
+
+// Get recipe by productId
+async getRecipeByProduct(productId) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/recipe/product/${productId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.getAuthToken()}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch recipe for product ${productId}: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching recipe by product:', error);
+    throw error;
+  }
+}
+
+// Update recipe (replace steps JSON)
+async updateRecipe(id, recipeData) {
+  try {
+    console.log('Updating recipe:', id, 'with data:', recipeData);
+
+    const response = await fetch(`${API_BASE_URL}/recipe/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.getAuthToken()}`
+      },
+      body: JSON.stringify(recipeData)
+    });
+
+    console.log(JSON.stringify(recipeData));
+
+    if (!response.ok) {
+      throw new Error(`Failed to update recipe: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error updating recipe:', error);
+    throw error;
+  }
+}
   
 }
 

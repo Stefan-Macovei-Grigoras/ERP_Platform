@@ -57,6 +57,7 @@ const getRecipesByProduct = async (req, res) => {
         attributes: ['id', 'name']
       }]
     });
+    //console.log(JSON.stringify(recipes)); 
     logger.log(`[GET RECIPES BY PRODUCT] Fetched ${recipes.length} recipe(s) for productId=${productId}.`);
     res.json(recipes);
   } catch (err) {
@@ -127,6 +128,7 @@ const createRecipe = async (req, res) => {
 // PUT /recipes/:id
 const updateRecipe = async (req, res) => {
   const { id } = req.params;
+  console.log(req.body)
   const { productId, name, yield: recipeYield, totalTime, steps } = req.body;
   logger.log(`[UPDATE RECIPE] Trying to update id=${id} with:`, { 
     productId, name, yield: recipeYield, totalTime, stepsCount: steps?.length 
@@ -165,21 +167,22 @@ const updateRecipe = async (req, res) => {
       }
 
       // Validate each step
-      const isValidSteps = steps.every(step => 
-        step.stepNumber && 
-        step.instruction && 
-        typeof step.stepNumber === 'number' &&
-        typeof step.instruction === 'string'
-      );
+    const isValidSteps = steps.every(step => 
+      step.number && 
+      step.instructions && 
+      typeof step.number === 'number' &&
+      typeof step.instructions === 'string'
+    );
 
       if (!isValidSteps) {
         logger.warn('[UPDATE RECIPE] Invalid step format');
         return res.status(400).json({ 
-          message: 'Each step must have stepNumber (number) and instruction (string)' 
-        });
+        message: 'Each step must have number (number) and instructions (string)' 
+      });
       }
 
-      updateData.steps = JSON.stringify(steps);
+      //updateData.steps = JSON.stringify(steps);
+      updateData.steps ={ steps };
     }
 
     // Perform the update

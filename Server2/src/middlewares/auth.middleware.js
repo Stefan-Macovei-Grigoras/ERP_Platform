@@ -32,9 +32,7 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 const authenticateToken = (req, res, next) => {
-  console.log('[AUTH MIDDLEWARE] Authenticating token...');
-  console.log('[AUTH MIDDLEWARE] Authorization header:', req.headers.authorization);
-  
+
   const token = req.headers.authorization?.replace('Bearer ', '');
   console.log('[AUTH MIDDLEWARE] Extracted token:', token ? 'TOKEN_FOUND' : 'NO_TOKEN');
 
@@ -44,12 +42,8 @@ const authenticateToken = (req, res, next) => {
   }
 
   try {
-    console.log('[AUTH MIDDLEWARE] Verifying token with JWT_SECRET...');
     const decoded = jwt.verify(token, JWT_SECRET);
-    console.log('[AUTH MIDDLEWARE] Token verified successfully. User:', decoded);
-    
     req.user = decoded;
-    console.log('[AUTH MIDDLEWARE] User attached to request:', req.user);
     next();
   } catch (error) {
     console.log('[AUTH MIDDLEWARE] Token verification failed:', error.message);
@@ -59,23 +53,15 @@ const authenticateToken = (req, res, next) => {
 
 const authorizeRole = (allowedRoles) => {
   return (req, res, next) => {
-    console.log('[ROLE MIDDLEWARE] Checking role authorization...');
-    console.log('[ROLE MIDDLEWARE] User from request:', req.user);
-    console.log('[ROLE MIDDLEWARE] Allowed roles:', allowedRoles);
-    
     if (!req.user) {
       console.log('[ROLE MIDDLEWARE] No user found in request');
       return res.status(401).json({ message: 'Authentication required' });
     }
-
-    console.log('[ROLE MIDDLEWARE] User role:', req.user.role);
     
     if (!allowedRoles.includes(req.user.role)) {
       console.log('[ROLE MIDDLEWARE] Access denied - insufficient permissions');
       return res.status(403).json({ message: 'Insufficient permissions' });
     }
-
-    console.log('[ROLE MIDDLEWARE] Role authorization successful');
     next();
   };
 };
