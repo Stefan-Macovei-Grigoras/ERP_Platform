@@ -69,6 +69,28 @@ const getUsers = async (req, res) => {
 };
 
 // PATCH /users/:id
+// const updateUser = async (req, res) => {
+//   const { id } = req.params;
+//   const { username, password, role } = req.body;
+
+//   try {
+//     const user = await User.findByPk(id);
+//     if (!user) return res.status(404).json({ message: 'User not found' });
+
+//     if (username) user.username = username;
+//     //if (password) user.password = await bcrypt.hash(password, 10);
+//     if(password) user.password = password
+    
+//     if (role) user.role = role;
+
+//     await user.save();
+//     res.json(user);
+//   } catch (err) {
+//     logger.error('[UPDATE USER ERROR]', err);
+//     res.status(500).json({ message: 'Error updating user' });
+//   }
+// };
+
 const updateUser = async (req, res) => {
   const { id } = req.params;
   const { username, password, role } = req.body;
@@ -78,13 +100,14 @@ const updateUser = async (req, res) => {
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     if (username) user.username = username;
-    //if (password) user.password = await bcrypt.hash(password, 10);
-    if(password) user.password = password
-    
+    if (password) user.password = await bcrypt.hash(password, 10); // Hash the password
     if (role) user.role = role;
 
     await user.save();
-    res.json(user);
+    
+    // Return user without password for security
+    const { password: _, ...userResponse } = user.toJSON();
+    res.json(userResponse);
   } catch (err) {
     logger.error('[UPDATE USER ERROR]', err);
     res.status(500).json({ message: 'Error updating user' });
