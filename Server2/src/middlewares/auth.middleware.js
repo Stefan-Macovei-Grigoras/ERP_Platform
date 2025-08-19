@@ -1,28 +1,86 @@
+// const jwt = require('jsonwebtoken');
+// require('dotenv').config();
+
+// const authenticateToken = (req, res, next) => {
+//   const authHeader = req.headers['authorization']; // Expected: Bearer <token>
+//   const token = authHeader && authHeader.split(' ')[1];
+
+//   if (!token) return res.status(401).json({ message: 'Missing token' });
+
+//   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+//     if (err) return res.status(403).json({ message: 'Invalid or expired token' });
+
+//     req.user = user; // Attach user to request
+//     next();
+//   });
+// };
+
+// // Example: requireRole('admin')
+// const requireRole = (role) => {
+//   return (req, res, next) => {
+//     if (!req.user || req.user.roleName !== role) {
+//       return res.status(403).json({ message: 'Forbidden: Insufficient role' });
+//     }
+//     next();
+//   };
+// };
+
+// module.exports = { authenticateToken, requireRole };
+
 const jwt = require('jsonwebtoken');
-require('dotenv').config();
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization']; // Expected: Bearer <token>
-  const token = authHeader && authHeader.split(' ')[1];
+  console.log('[AUTH MIDDLEWARE] Authenticating token...');
+  console.log('[AUTH MIDDLEWARE] Authorization header:', req.headers.authorization);
+  
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  console.log('[AUTH MIDDLEWARE] Extracted token:', token ? 'TOKEN_FOUND' : 'NO_TOKEN');
 
-  if (!token) return res.status(401).json({ message: 'Missing token' });
+  if (!token) {
+    console.log('[AUTH MIDDLEWARE] No token provided');
+    return res.status(401).json({ message: 'Access token required' });
+  }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ message: 'Invalid or expired token' });
-
-    req.user = user; // Attach user to request
+  try {
+    console.log('[AUTH MIDDLEWARE] Verifying token with JWT_SECRET...');
+    const decoded = jwt.verify(token, JWT_SECRET);
+    console.log('[AUTH MIDDLEWARE] Token verified successfully. User:', decoded);
+    
+    req.user = decoded;
+    console.log('[AUTH MIDDLEWARE] User attached to request:', req.user);
     next();
-  });
+  } catch (error) {
+    console.log('[AUTH MIDDLEWARE] Token verification failed:', error.message);
+    return res.status(401).json({ message: 'Invalid or expired token' });
+  }
 };
 
-// Example: requireRole('admin')
-const requireRole = (role) => {
+const authorizeRole = (allowedRoles) => {
   return (req, res, next) => {
-    if (!req.user || req.user.roleName !== role) {
-      return res.status(403).json({ message: 'Forbidden: Insufficient role' });
+    console.log('[ROLE MIDDLEWARE] Checking role authorization...');
+    console.log('[ROLE MIDDLEWARE] User from request:', req.user);
+    console.log('[ROLE MIDDLEWARE] Allowed roles:', allowedRoles);
+    
+    if (!req.user) {
+      console.log('[ROLE MIDDLEWARE] No user found in request');
+      return res.status(401).json({ message: 'Authentication required' });
     }
+
+    console.log('[ROLE MIDDLEWARE] User role:', req.user.role);
+    
+    if (!allowedRoles.includes(req.user.role)) {
+      console.log('[ROLE MIDDLEWARE] Access denied - insufficient permissions');
+      return res.status(403).json({ message: 'Insufficient permissions' });
+    }
+
+    console.log('[ROLE MIDDLEWARE] Role authorization successful');
     next();
   };
 };
 
-module.exports = { authenticateToken, requireRole };
+module.exports = {
+  authenticateToken,
+  authorizeRole
+};

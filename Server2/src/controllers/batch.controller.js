@@ -243,7 +243,8 @@ const getBatch = async (req, res) => {
 
 // POST /batches
 const createBatch = async (req, res) => {
-  const { productId, stage = 'due', expectedYield, notes = '' } = req.body;
+  console.log(req.body);
+  const { productId, stage = 'due', expectedYield} = req.body;
   logger.log(`[CREATE BATCH] Received: productId=${productId}, stage=${stage}`);
   
   try {
